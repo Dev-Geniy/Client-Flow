@@ -1,5 +1,5 @@
 {
-  "name": "Client Manager",
+  "name": "Client-Flow",
   "short_name": "ClientMgr",
   "start_url": "/",
   "display": "standalone",
