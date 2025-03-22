@@ -227,7 +227,8 @@ button[title]:hover::after {
 
 .filter-btn:hover:not(.active) { background: var(--glass-bg); }
 
-#tag-filter, #date-filter {
+#tag-filter, #date-filter-start, #date-filter-end {
+  color: #777;
   padding: 8px 16px;
   border-radius: 20px;
   border: none;
@@ -726,4 +727,14 @@ form textarea { min-height: 100px; resize: vertical; }
   background: var(--card-bg);
   color: var(--text);
   padding: 10px;
+}
+
+#date-filter-start, #date-filter-end {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  background: var(--glass-bg);
+  font-size: 13px;
+  flex: 1;
+  max-width: 150px;
 }
