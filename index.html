@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Бесплатное веб-приложение для управления клиентами с заметками, тегами, фильтрами и экспортом в CSV. Простая CRM для малого бизнеса.">
   <meta name="robots" content="index, follow">
   <title>Client Flow - Простая CRM для управления клиентами</title>
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Client Flow - Простая CRM для клиентов">
@@ -18,13 +17,26 @@
 
   <!-- Twitter Cards -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Client Manager - Простая CRM">
+  <meta name="twitter:title" content="Client Flow - Простая CRM">
   <meta name="twitter:description" content="Бесплатное приложение для управления клиентами с заметками и экспортом.">
   <meta name="twitter:image" content="https://i.ibb.co/WpFcQWnh/2025-03-21-064306.png">
 
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=ВАШ-ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'ВАШ-ID');
+  </script>
+  
   <!-- Стили -->
   <link rel="stylesheet" href="styles.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+   <!-- Подключение внешних библиотек (Chart.js и Sortable.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" defer></script>
 </head>
 <body>
   <div class="dashboard">
@@ -164,7 +176,18 @@
    
     <div class="notification" id="notification" role="alert"></div>
   </div>
-
+<!-- Modal for bulk deletion -->
+<div class="modal" id="bulk-delete-modal" role="dialog" aria-modal="true" aria-labelledby="bulk-confirm-title">
+  <div class="modal-content glass confirm-modal">
+    <h3 id="bulk-confirm-title">Удалить выбранных клиентов?</h3>
+    <p>Вы уверены, что хотите удалить выбранных клиентов? Это действие нельзя отменить.</p>
+    <div class="actions">
+      <button id="bulk-delete-cancel" class="btn" title="Отменить удаление" aria-label="Отменить удаление">Отмена</button>
+      <button id="bulk-delete-ok" class="btn gradient-btn" title="Подтвердить удаление" aria-label="Подтвердить удаление">Удалить</button>
+    </div>
+  </div>
+</div>
+  
   <script src="script.js"></script>
 </body>
 </html>
