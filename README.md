@@ -60,6 +60,7 @@ Client-Flow/
 
 ## Зависимости
 [Chart.js](https://www.chartjs.org/) — для построения графиков.
+
 [SortableJS](https://sortablejs.github.io/Sortable/) — для drag-and-drop карточек.
 
 ## Лицензия
