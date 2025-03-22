@@ -88,7 +88,7 @@ function renderClients(filter = 'all', tagFilter = '', dateFilter = '') {
         <h3>${client.name}</h3>
         ${client.company ? `<p>${client.company}</p>` : ''}
         ${client.image ? `<img src="${client.image}" alt="${client.name}">` : ''}
-        ${client.social ? `<p><a href="${client.social}" target="_blank">${client.social.split('/').pop()}</a></p>` : ''}
+        ${client.social ? `<p><a href="${client.social}" target="_blank" rel="noopener">${client.social.split('/').pop()}</a></p>` : ''}
         ${client.phones?.length ? client.phones.map(phone => `<p>${phone}</p>`).join('') : ''}
         ${client.tags?.length ? `<div class="tags">${client.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
         ${client.notes ? `<pre class="notes">${escapeHtml(client.notes)}</pre>` : ''}
@@ -250,8 +250,12 @@ document.getElementById('confirm-delete-ok').addEventListener('click', () => {
 // Фильтры
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-pressed', 'false');
+    });
     btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
     renderClients(btn.id.replace('filter-', ''), document.getElementById('tag-filter').value, document.getElementById('date-filter').value);
   });
 });
@@ -295,7 +299,7 @@ document.getElementById('search').addEventListener('input', (e) => {
         <h3>${client.name}</h3>
         ${client.company ? `<p>${client.company}</p>` : ''}
         ${client.image ? `<img src="${client.image}" alt="${client.name}">` : ''}
-        ${client.social ? `<p><a href="${client.social}" target="_blank">${client.social.split('/').pop()}</a></p>` : ''}
+        ${client.social ? `<p><a href="${client.social}" target="_blank" rel="noopener">${client.social.split('/').pop()}</a></p>` : ''}
         ${client.phones?.length ? client.phones.map(phone => `<p>${phone}</p>`).join('') : ''}
         ${client.tags?.length ? `<div class="tags">${client.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
         ${client.notes ? `<pre class="notes">${escapeHtml(client.notes)}</pre>` : ''}
@@ -438,7 +442,7 @@ document.getElementById('add-to-calendar').addEventListener('click', () => {
   if (deadline) {
     const date = new Date(deadline);
     const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(name)}&dates=${date.toISOString().replace(/-|:|\.\d\d\d/g, '')}/${date.toISOString().replace(/-|:|\.\d\d\d/g, '')}`;
-    window.open(googleCalendarUrl, '_blank');
+    window.open(googleCalendarUrl, '_blank', 'noopener');
   }
 });
 
@@ -517,11 +521,11 @@ function updateChart() {
 function escapeHtml(text) {
   if (!text) return '';
   return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g, '&')
+    .replace(/</g, '<')
+    .replace(/>/g, '>')
+    .replace(/"/g, '"')
+    .replace(/'/g, ''');
 }
 
 // Инициализация графика при загрузке
