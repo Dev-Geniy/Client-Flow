@@ -1,6 +1,7 @@
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open('client-flow-v1').then((cache) => {
+    caches.open('client-flow-v2').then((cache) => {
       return cache.addAll([
         '/',
         '/index.html',
@@ -12,6 +13,24 @@ self.addEventListener('install', (event) => {
         '/manifest.json'
       ]);
     })
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  const cacheWhitelist = ['client-flow-v2'];
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(),
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (!cacheWhitelist.includes(cacheName)) {
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+    ])
   );
 });
 
