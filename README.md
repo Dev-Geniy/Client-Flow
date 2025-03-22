@@ -42,4 +42,19 @@
 - Современный браузер (Chrome, Firefox, Edge, Safari).
 - Подключение к интернету для первой загрузки (после установки работает офлайн).
 
+## Структура проекта
+
+   ```bash
+Client-Flow/
+├── index.html       # Главная страница
+├── styles.css       # Стили приложения
+├── script.js        # Логика приложения
+├── sw.js            # Service Worker для PWA
+├── manifest.json    # Манифест для PWA
+├── favicon.png      # Иконка сайта
+├── favicon-192x192.png  # Иконка для PWA
+├── favicon-512x512.png  # Иконка для PWA
+├── sitemap.xml      # Карта сайта для SEO
+└── README.md        # Этот файл
+   ```
 
