@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -21,35 +22,23 @@
   <meta name="twitter:description" content="Бесплатное приложение для управления клиентами с заметками и экспортом.">
   <meta name="twitter:image" content="https://i.ibb.co/WpFcQWnh/2025-03-21-064306.png">
 
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=ВАШ-ID"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'ВАШ-ID');
-  </script>
-  
   <!-- Стили -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/styles.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  
-   <!-- Подключение внешних библиотек (Chart.js и Sortable.js) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" defer></script>
 </head>
 <body>
   <div class="dashboard">
     <header>
       <div class="logo">
         <span class="gradient-text">Client Flow</span>
-        <span class="version">v1.0</span>
+        <span class="version">v1.1</span>
       </div>
       <div class="search-bar">
         <span class="material-icons">search</span>
-        <input type="text" id="search" placeholder="Найти клиента или компанию...">
+        <input type="text" id="search" placeholder="Найти клиента или компанию..." aria-label="Поиск клиентов">
       </div>
       <div class="header-actions">
+        <button id="bulk-actions" class="btn" title="Массовые действия" disabled><span class="material-icons">select_all</span> Выбрать</button>
         <button id="add-client" class="btn gradient-btn" title="Добавить нового клиента"><span class="material-icons">add</span> Новый клиент</button>
       </div>
     </header>
@@ -80,11 +69,14 @@
         <button id="filter-inactive" class="filter-btn" title="Показать неактивных клиентов">Неактивные</button>
         <button id="filter-priority" class="filter-btn" title="Показать приоритетных клиентов">Приоритет</button>
         <button id="filter-favorite" class="filter-btn" title="Показать избранных клиентов">Избранные</button>
-        <input type="text" id="tag-filter" placeholder="Фильтр по тегу" title="Введите тег для фильтрации">
-        <input type="date" id="date-filter" title="Фильтр по дате создания">
+        <input type="text" id="tag-filter" placeholder="Фильтр по тегу" title="Введите тег для фильтрации" aria-label="Фильтр по тегу">
+        <div class="date-range-filter">
+          <input type="date" id="date-filter-start" title="Дата начала" aria-label="Дата начала">
+          <input type="date" id="date-filter-end" title="Дата окончания" aria-label="Дата окончания">
+        </div>
       </div>
 
-      <div class="client-grid" id="client-grid"></div>
+      <div class="client-grid" id="client-grid" role="grid"></div>
     </main>
 
     <aside class="sidebar" id="sidebar">
@@ -95,87 +87,84 @@
           <span><span class="material-icons">palette</span> Тема</span>
           <div class="theme-toggle">
             <span class="material-icons">light_mode</span>
-            <input type="checkbox" id="theme-switch">
+            <input type="checkbox" id="theme-switch" aria-label="Переключить тему">
             <span class="material-icons">dark_mode</span>
           </div>
         </div> 
         <div class="setting">
           <span><span class="material-icons">animation</span> Анимации</span>
-          <input type="checkbox" id="animations" checked>
+          <input type="checkbox" id="animations" checked aria-label="Включить/выключить анимации">
         </div>
-<div class="setting">
-  <span><span class="material-icons">view_module</span> Вид карточек</span>
-  <div class="select-wrapper">
-    <select id="card-layout">
-      <option value="detailed">Детальный</option>
-      <option value="compact">Компактный</option>
-    </select>
-  </div>
-</div> 
+        <div class="setting">
+          <span><span class="material-icons">view_module</span> Вид карточек</span>
+          <div class="select-wrapper">
+            <select id="card-layout" aria-label="Выбрать вид карточек">
+              <option value="detailed">Детальный</option>
+              <option value="compact">Компактный</option>
+            </select>
+          </div>
+        </div> 
         <button id="export-btn" class="btn gradient-btn" title="Экспортировать данные в CSV"><span class="material-icons">download</span> Экспорт</button>
         <button id="import-btn" class="btn" title="Импортировать данные из CSV"><span class="material-icons">upload</span> Импорт</button>
         <div class="chart-section">
           <h4>Рост клиентской базы:</h4>
-          <canvas id="client-growth-chart"></canvas>
+          <canvas id="client-growth-chart" aria-label="График роста клиентской базы"></canvas>
           <p class="chart-info">График показывает количество новых клиентов по месяцам.</p>
         </div>
       </div>
     </aside>
 
-    <div class="modal" id="client-modal">
+    <div class="modal" id="client-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-content glass">
-        <span class="close material-icons" title="Закрыть">close</span>
-        <h2>Новый клиент</h2>
+        <span class="close material-icons" title="Закрыть" aria-label="Закрыть модальное окно">close</span>
+        <h2 id="modal-title">Новый клиент</h2>
         <form id="client-form">
-          <input id="name" placeholder="Имя*" required>
-          <input id="company" placeholder="Компания">
-          <input id="social" placeholder="Соцсеть (URL)">
-          <input id="website" placeholder="Сайт">
+          <input id="name" placeholder="Имя*" required aria-label="Имя клиента">
+          <input id="company" placeholder="Компания" aria-label="Название компании">
+          <input id="social" placeholder="Соцсеть (URL)" aria-label="Ссылка на соцсеть">
+          <input id="website" placeholder="Сайт" aria-label="Ссылка на сайт">
           <div id="phones-container">
             <div class="phone-group">
-              <input placeholder="Телефон" name="phone">
-              <button type="button" class="btn-add-phone" title="Добавить ещё телефон">+</button>
+              <input placeholder="Телефон" name="phone" aria-label="Номер телефона">
+              <button type="button" class="btn-add-phone" title="Добавить ещё телефон" aria-label="Добавить ещё телефон">+</button>
             </div>
           </div>
-          <input id="image" placeholder="URL изображения">
-          <input id="tags" placeholder="Теги (через запятую)">
-          <input id="deadline" type="datetime-local" title="Укажите дату и время дедлайна">
-          <select id="status">
+          <input id="image" placeholder="URL изображения" aria-label="URL изображения">
+          <input id="tags" placeholder="Теги (через запятую)" aria-label="Теги через запятую">
+          <input id="deadline" type="datetime-local" title="Укажите дату и время дедлайна" aria-label="Дата и время дедлайна">
+          <select id="status" aria-label="Статус клиента">
             <option value="active">Активный</option>
             <option value="inactive">Неактивный</option>
             <option value="priority">Приоритет</option>
           </select>
-          <textarea id="notes" placeholder="Заметки"></textarea>
+          <textarea id="notes" placeholder="Заметки" aria-label="Заметки о клиенте"></textarea>
           <div class="favorite-checkbox">
-            <input type="checkbox" id="favorite">
+            <input type="checkbox" id="favorite" aria-label="Добавить в избранные">
             <label for="favorite">Добавить в Избранные</label>
           </div>
           <div class="actions">
-            <button type="button" id="send-email" class="btn" title="Отправить email">Email</button>
-            <button type="button" id="add-to-calendar" class="btn" title="Добавить в календарь">В календарь</button>
-            <button type="submit" class="btn gradient-btn" title="Сохранить клиента">Сохранить</button>
+            <button type="button" id="send-email" class="btn" title="Отправить email" aria-label="Отправить email">Email</button>
+            <button type="button" id="add-to-calendar" class="btn" title="Добавить в календарь" aria-label="Добавить в календарь">В календарь</button>
+            <button type="submit" class="btn gradient-btn" title="Сохранить клиента" aria-label="Сохранить клиента">Сохранить</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Модальное окно для подтверждения удаления -->
-    <div class="modal" id="confirm-delete-modal">
+    <div class="modal" id="confirm-delete-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
       <div class="modal-content glass confirm-modal">
-        <h3>Удалить клиента?</h3>
+        <h3 id="confirm-title">Удалить клиента?</h3>
         <p>Вы уверены, что хотите удалить этого клиента? Это действие нельзя отменить.</p>
         <div class="actions">
-          <button id="confirm-delete-cancel" class="btn" title="Отменить удаление">Отмена</button>
-          <button id="confirm-delete-ok" class="btn gradient-btn" title="Подтвердить удаление">Удалить</button>
+          <button id="confirm-delete-cancel" class="btn" title="Отменить удаление" aria-label="Отменить удаление">Отмена</button>
+          <button id="confirm-delete-ok" class="btn gradient-btn" title="Подтвердить удаление" aria-label="Подтвердить удаление">Удалить</button>
         </div>
       </div>
     </div>
    
-    <div class="notification" id="notification"></div>
+    <div class="notification" id="notification" role="alert"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-  <script src="script.js"></script>
+  <script src="/script.js"></script>
 </body>
 </html>
