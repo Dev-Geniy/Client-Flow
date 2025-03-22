@@ -66,7 +66,7 @@ SortableJS — для drag-and-drop карточек.
 Этот проект распространяется под лицензией MIT (LICENSE). Вы можете свободно использовать, изменять и распространять код.
 
 ## Автор
-Создано [DevGeny](https://github.com/Dev-Geniy/.
+Создано [DevGeny](https://github.com/Dev-Geniy/)
 
 ## Вклад
 Если хотите улучшить проект:
