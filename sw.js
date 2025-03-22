@@ -3,14 +3,14 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open('client-flow-v2').then((cache) => {
       return cache.addAll([
-        '/',
-        '/index.html',
-        '/styles.css',
-        '/script.js',
-        '/favicon.png',
-        '/favicon-192x192.png',
-        '/favicon-512x512.png',
-        '/manifest.json'
+        'index.html',
+        'styles.css',
+        'script.js',
+        'favicon.png',
+        'favicon-144x144.png',
+        'favicon-192x192.png',
+        'favicon-512x512.png',
+        'manifest.json'
       ]);
     })
   );
