@@ -490,3 +490,12 @@ function escapeHtml(text) {
 
 // Инициализация графика при загрузке
 updateChart();
+
+// Регистрация Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(() => console.log('Service Worker зарегистрирован'))
+      .catch(err => console.error('Ошибка регистрации Service Worker:', err));
+  });
+}
