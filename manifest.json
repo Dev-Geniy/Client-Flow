@@ -1,6 +1,6 @@
 {
-  "name": "Client-Flow",
-  "short_name": "ClientMgr",
+  "name": "Client Flow",
+  "short_name": "ClientFlow",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -16,5 +16,8 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "categories": ["productivity", "business", "utilities"],
+  "description": "Простая CRM для управления клиентами с заметками, тегами и экспортом в CSV. Бесплатно и офлайн!",
+  "orientation": "landscape"
 }
