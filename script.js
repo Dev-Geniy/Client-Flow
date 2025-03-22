@@ -13,6 +13,7 @@ const grid = document.getElementById('client-grid');
 const sidebar = document.getElementById('sidebar');
 const modal = document.getElementById('client-modal');
 const confirmModal = document.getElementById('confirm-delete-modal');
+const bulkDeleteModal = document.getElementById('bulk-delete-modal'); // New modal for bulk deletion
 const notification = document.getElementById('notification');
 let clients = JSON.parse(localStorage.getItem('clients')) || [];
 let chartInstance = null;
@@ -172,16 +173,33 @@ document.getElementById('bulk-actions').addEventListener('click', () => {
     bulkButton.innerHTML = '<span class="material-icons">delete</span> Удалить выбранное';
     bulkButton.classList.add('gradient-btn');
   } else {
-    if (selectedClients.size > 0 && confirm('Удалить выбранных клиентов?')) {
-      clients = clients.filter((_, index) => !selectedClients.has(index));
-      localStorage.setItem('clients', JSON.stringify(clients));
-      selectedClients.clear();
-      renderClients(document.querySelector('.filter-btn.active').id.replace('filter-', ''));
-      showNotification('Выбранные клиенты удалены');
+    if (selectedClients.size > 0) {
+      // Show the bulk delete confirmation modal instead of using confirm()
+      bulkDeleteModal.style.display = 'flex';
+      trapFocus(bulkDeleteModal);
+    } else {
+      // Reset the button if no clients are selected
+      bulkButton.innerHTML = '<span class="material-icons">select_all</span> Выбрать';
+      bulkButton.classList.remove('gradient-btn');
     }
-    bulkButton.innerHTML = '<span class="material-icons">select_all</span> Выбрать';
-    bulkButton.classList.remove('gradient-btn');
   }
+});
+
+// Handle bulk delete confirmation
+document.getElementById('bulk-delete-cancel').addEventListener('click', () => {
+  bulkDeleteModal.style.display = 'none';
+});
+
+document.getElementById('bulk-delete-ok').addEventListener('click', () => {
+  clients = clients.filter((_, index) => !selectedClients.has(index));
+  localStorage.setItem('clients', JSON.stringify(clients));
+  selectedClients.clear();
+  renderClients(document.querySelector('.filter-btn.active').id.replace('filter-', ''));
+  showNotification('Выбранные клиенты удалены');
+  bulkDeleteModal.style.display = 'none';
+  const bulkButton = document.getElementById('bulk-actions');
+  bulkButton.innerHTML = '<span class="material-icons">select_all</span> Выбрать';
+  bulkButton.classList.remove('gradient-btn');
 });
 
 grid.addEventListener('change', (e) => {
