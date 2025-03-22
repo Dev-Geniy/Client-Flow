@@ -2,9 +2,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Client Flow</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="description" content="Бесплатное веб-приложение для управления клиентами с заметками, тегами, фильтрами и экспортом в CSV. Простая CRM для малого бизнеса.">
+  <meta name="robots" content="index, follow">
+  <title>Client Flow - Простая CRM для управления клиентами</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Client Flow - Простая CRM для клиентов">
+  <meta property="og:description" content="Управляйте клиентами легко: заметки, теги, экспорт в CSV. Бесплатно и онлайн!">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://dev-geniy.github.io/Client-Flow/">
+  <meta property="og:image" content="https://i.ibb.co/WpFcQWnh/2025-03-21-064306.png">
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Client Manager - Простая CRM">
+  <meta name="twitter:description" content="Бесплатное приложение для управления клиентами с заметками и экспортом.">
+  <meta name="twitter:image" content="https://i.ibb.co/WpFcQWnh/2025-03-21-064306.png">
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=ВАШ-ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'ВАШ-ID');
+  </script>
+  
+  <!-- Стили -->
+  <link rel="stylesheet" href="/styles.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+   <!-- Подключение внешних библиотек (Chart.js и Sortable.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" defer></script>
 </head>
 <body>
   <div class="dashboard">
