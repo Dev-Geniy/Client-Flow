@@ -1,4 +1,3 @@
-// sw.js
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open('client-flow-v1').then((cache) => {
