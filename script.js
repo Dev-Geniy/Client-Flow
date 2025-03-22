@@ -3,7 +3,15 @@ const sidebar = document.getElementById('sidebar');
 const modal = document.getElementById('client-modal');
 const confirmModal = document.getElementById('confirm-delete-modal');
 const notification = document.getElementById('notification');
-let clients = JSON.parse(localStorage.getItem('clients')) || [];
+let clients = [];
+try {
+  const storedClients = localStorage.getItem('clients');
+  clients = storedClients ? JSON.parse(storedClients) : [];
+} catch (error) {
+  console.error('Ошибка при загрузке данных из localStorage:', error);
+  clients = [];
+  localStorage.setItem('clients', JSON.stringify(clients));
+}
 let chartInstance = null;
 let deleteIndex = null;
 
@@ -50,7 +58,7 @@ if (localStorage.getItem('cardLayout')) cardLayout.value = localStorage.getItem(
 
 // Рендеринг клиентов
 function renderClients(filter = 'all', tagFilter = '', dateFilter = '') {
-  grid.innerHTML = '';
+  const fragment = document.createDocumentFragment();
   let filteredClients = clients.filter(c => 
     (filter === 'all' || c.status === filter || (filter === 'favorite' && c.favorite)) && 
     (!tagFilter || c.tags?.some(t => t.toLowerCase().includes(tagFilter.toLowerCase()))) &&
@@ -92,8 +100,11 @@ function renderClients(filter = 'all', tagFilter = '', dateFilter = '') {
         </div>
       `;
     }
-    grid.appendChild(card);
+    fragment.appendChild(card);
   });
+
+  grid.innerHTML = '';
+  grid.appendChild(fragment);
   updateStats();
   updateChart();
 }
@@ -106,7 +117,12 @@ new Sortable(grid, {
   onEnd: (evt) => {
     const moved = clients.splice(evt.oldIndex, 1)[0];
     clients.splice(evt.newIndex, 0, moved);
-    localStorage.setItem('clients', JSON.stringify(clients));
+    try {
+      localStorage.setItem('clients', JSON.stringify(clients));
+    } catch (error) {
+      console.error('Ошибка при сохранении данных в localStorage:', error);
+      showNotification('Ошибка при сохранении данных');
+    }
   }
 });
 
@@ -116,7 +132,7 @@ document.getElementById('add-client').addEventListener('click', () => {
   document.getElementById('client-form').reset();
   document.getElementById('phones-container').innerHTML = `
     <div class="phone-group">
-      <input placeholder="Телефон" name="phone">
+      <input placeholder="Телефон" name="phone" autocomplete="tel">
       <button type="button" class="btn-add-phone" title="Добавить ещё телефон">+</button>
     </div>
   `;
@@ -132,7 +148,7 @@ document.getElementById('phones-container').addEventListener('click', (e) => {
     const container = document.getElementById('phones-container');
     const newPhone = document.createElement('div');
     newPhone.classList.add('phone-group');
-    newPhone.innerHTML = '<input placeholder="Телефон" name="phone" style="margin: 10px 0;">';
+    newPhone.innerHTML = '<input placeholder="Телефон" name="phone" style="margin: 10px 0;" autocomplete="tel">';
     container.appendChild(newPhone);
   }
 });
@@ -164,7 +180,12 @@ document.getElementById('client-form').addEventListener('submit', (e) => {
   else clients.push(data);
 
   clients.sort((a, b) => (b.priority || 0) - (a.priority || 0));
-  localStorage.setItem('clients', JSON.stringify(clients));
+  try {
+    localStorage.setItem('clients', JSON.stringify(clients));
+  } catch (error) {
+    console.error('Ошибка при сохранении данных в localStorage:', error);
+    showNotification('Ошибка при сохранении данных');
+  }
   renderClients(document.querySelector('.filter-btn.active').id.replace('filter-', ''));
   modal.style.display = 'none';
   showNotification('Клиент сохранён');
@@ -181,12 +202,12 @@ window.editClient = (index) => {
   const phonesContainer = document.getElementById('phones-container');
   phonesContainer.innerHTML = client.phones?.length ? client.phones.map((phone, i) => `
     <div class="phone-group">
-      <input placeholder="Телефон" name="phone" value="${phone}" style="margin: 10px 0;">
+      <input placeholder="Телефон" name="phone" value="${phone}" style="margin: 10px 0;" autocomplete="tel">
       ${i === 0 ? '<button type="button" class="btn-add-phone" title="Добавить ещё телефон">+</button>' : ''}
     </div>
   `).join('') : `
     <div class="phone-group">
-      <input placeholder="Телефон" name="phone">
+      <input placeholder="Телефон" name="phone" autocomplete="tel">
       <button type="button" class="btn-add-phone" title="Добавить ещё телефон">+</button>
     </div>
   `;
@@ -213,7 +234,12 @@ document.getElementById('confirm-delete-cancel').addEventListener('click', () =>
 document.getElementById('confirm-delete-ok').addEventListener('click', () => {
   if (deleteIndex !== null) {
     clients.splice(deleteIndex, 1);
-    localStorage.setItem('clients', JSON.stringify(clients));
+    try {
+      localStorage.setItem('clients', JSON.stringify(clients));
+    } catch (error) {
+      console.error('Ошибка при сохранении данных в localStorage:', error);
+      showNotification('Ошибка при сохранении данных');
+    }
     renderClients(document.querySelector('.filter-btn.active').id.replace('filter-', ''));
     showNotification('Клиент удалён');
     confirmModal.style.display = 'none';
@@ -245,7 +271,7 @@ document.getElementById('search').addEventListener('input', (e) => {
     c.name.toLowerCase().includes(query) || 
     (c.company && c.company.toLowerCase().includes(query))
   );
-  grid.innerHTML = '';
+  const fragment = document.createDocumentFragment();
   filteredClients.forEach((client, index) => {
     const card = document.createElement('div');
     card.classList.add('client-card', client.status);
@@ -281,16 +307,18 @@ document.getElementById('search').addEventListener('input', (e) => {
         </div>
       `;
     }
-    grid.appendChild(card);
+    fragment.appendChild(card);
   });
+
+  grid.innerHTML = '';
+  grid.appendChild(fragment);
   updateStats();
 });
 
-// Экспорт (исправлено: экранирование переносов строк в notes)
+// Экспорт
 document.getElementById('export-btn').addEventListener('click', () => {
   const escapeCsvValue = (value) => {
     if (!value) return '';
-    // Экранируем запятые и переносы строк, оборачивая в кавычки
     return `"${value.replace(/"/g, '""').replace(/\n/g, '\\n')}"`;
   };
 
@@ -306,7 +334,7 @@ document.getElementById('export-btn').addEventListener('click', () => {
       escapeCsvValue(c.tags?.join(';')),
       escapeCsvValue(c.deadline),
       escapeCsvValue(c.status),
-      escapeCsvValue(c.notes), // Экранируем переносы строк
+      escapeCsvValue(c.notes),
       c.favorite,
       escapeCsvValue(c.createdAt)
     ].join(',')).join('\n');
@@ -321,7 +349,7 @@ document.getElementById('export-btn').addEventListener('click', () => {
   showNotification('Данные экспортированы');
 });
 
-// Импорт (исправлено: восстановление переносов строк в notes)
+// Импорт
 document.getElementById('import-btn').addEventListener('click', () => {
   const input = document.createElement('input');
   input.type = 'file';
@@ -335,7 +363,6 @@ document.getElementById('import-btn').addEventListener('click', () => {
       let currentLine = '';
       let inQuotes = false;
 
-      // Парсинг CSV с учётом кавычек
       for (let char of text) {
         if (char === '"') {
           inQuotes = !inQuotes;
@@ -346,9 +373,9 @@ document.getElementById('import-btn').addEventListener('click', () => {
           currentLine += char;
         }
       }
-      if (currentLine) lines.push(currentLine); // Добавляем последнюю строку
+      if (currentLine) lines.push(currentLine);
 
-      clients = lines.slice(1).map(line => { // Пропускаем заголовок
+      clients = lines.slice(1).map(line => {
         const fields = [];
         let currentField = '';
         let inQuotes = false;
@@ -365,7 +392,7 @@ document.getElementById('import-btn').addEventListener('click', () => {
             currentField += char;
           }
         }
-        fields.push(currentField); // Добавляем последнее поле
+        fields.push(currentField);
 
         const [name, company, phones, social, website, image, tags, deadline, status, notes, favorite, createdAt] = fields;
         return {
@@ -378,13 +405,18 @@ document.getElementById('import-btn').addEventListener('click', () => {
           tags: tags.replace(/^"|"$/g, '').replace(/""/g, '"').split(';').filter(t => t) || [],
           deadline: deadline.replace(/^"|"$/g, '').replace(/""/g, '"') || '',
           status: status.replace(/^"|"$/g, '').replace(/""/g, '"') || 'active',
-          notes: notes.replace(/^"|"$/g, '').replace(/""/g, '"').replace(/\\n/g, '\n') || '', // Восстанавливаем переносы строк
+          notes: notes.replace(/^"|"$/g, '').replace(/""/g, '"').replace(/\\n/g, '\n') || '',
           favorite: favorite === 'true',
           createdAt: createdAt.replace(/^"|"$/g, '').replace(/""/g, '"') || new Date().toISOString()
         };
       }).filter(c => c.name);
 
-      localStorage.setItem('clients', JSON.stringify(clients));
+      try {
+        localStorage.setItem('clients', JSON.stringify(clients));
+      } catch (error) {
+        console.error('Ошибка при сохранении данных в localStorage:', error);
+        showNotification('Ошибка при сохранении данных');
+      }
       renderClients();
       showNotification('Данные импортированы');
     };
@@ -483,9 +515,13 @@ function updateChart() {
 
 // Экранирование HTML для безопасности
 function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // Инициализация графика при загрузке
