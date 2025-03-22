@@ -52,6 +52,7 @@ Client-Flow/
 ├── sw.js            # Service Worker для PWA
 ├── manifest.json    # Манифест для PWA
 ├── favicon.png      # Иконка сайта
+├── favicon-144x144.png  # Иконка для PWA
 ├── favicon-192x192.png  # Иконка для PWA
 ├── favicon-512x512.png  # Иконка для PWA
 ├── sitemap.xml      # Карта сайта для SEO
