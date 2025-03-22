@@ -59,8 +59,8 @@ Client-Flow/
    ```
 
 ## Зависимости
-Chart.js — для построения графиков.
-SortableJS — для drag-and-drop карточек.
+[Chart.js](https://www.chartjs.org/) — для построения графиков.
+[SortableJS](https://sortablejs.github.io/Sortable/) — для drag-and-drop карточек.
 
 ## Лицензия
 Этот проект распространяется под лицензией MIT (LICENSE). Вы можете свободно использовать, изменять и распространять код.
