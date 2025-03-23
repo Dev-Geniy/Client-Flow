@@ -1,0 +1,264 @@
+<DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мини Форум Client Flow</title>
+  <link rel="stylesheet" href="community.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Подключение Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+</head>
+<body class="dark">
+  <!-- Хедер -->
+  <header>
+    <div class="logo">
+      <span class="gradient-text">Client Flow</span>
+      <span class="version">v1.1</span>
+    </div>
+    <nav>
+      <a href="index.html">Главная</a>
+      <a href="community.html" class="active">Мини Форум</a>
+      <a href="blog.html">Блог</a>
+      <a href="referral.html">Пригласи друга</a>
+    </nav>
+    <div class="header-actions">
+      <div class="theme-toggle">
+        <span class="material-icons">brightness_6</span>
+        <input type="checkbox" id="theme-switch" aria-label="Переключить тему">
+      </div>
+    </div>
+  </header>
+
+  <!-- Основное содержимое -->
+  <main>
+    <section class="community-section">
+      <div class="community-header">
+        <h1>Мини Форум Client Flow</h1>
+        <p>Общайтесь, делитесь опытом и находите ответы в нашем сообществе!</p>
+        <div class="community-actions">
+          <div class="search-bar">
+            <input type="text" id="thread-search" placeholder="Поиск по темам..." aria-label="Поиск по темам">
+            <span class="material-icons">search</span>
+          </div>
+          <button id="create-thread-btn" class="btn gradient-btn" title="Создать новую тему">
+            <span class="material-icons">add</span> Новая тема
+          </button>
+        </div>
+      </div>
+
+      <!-- Фильтры -->
+      <div class="filters">
+        <button class="filter-btn category-filter active" data-category="all">Все</button>
+        <button class="filter-btn category-filter" data-category="general">Общее</button>
+        <button class="filter-btn category-filter" data-category="support">Поддержка</button>
+        <button class="filter-btn category-filter" data-category="ideas">Идеи</button>
+        <div class="select-wrapper">
+          <select id="sort-threads" aria-label="Сортировать темы">
+            <option value="newest">Сначала новые</option>
+            <option value="oldest">Сначала старые</option>
+            <option value="popular">Популярные</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Список тем -->
+      <div class="thread-grid" id="thread-grid">
+        <!-- Темы будут добавлены динамически через JavaScript -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Боковая панель -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-handle">
+      <span class="material-icons">chevron_left</span>
+    </div>
+    <div class="sidebar-content">
+      <div class="setting">
+        <span><span class="material-icons">palette</span> Тема</span>
+        <div class="theme-toggle">
+          <input type="checkbox" id="sidebar-theme-switch" aria-label="Переключить тему">
+        </div>
+      </div>
+      <div class="setting about-community">
+        <span><span class="material-icons">info</span> О сообществе</span>
+        <p>Присоединяйтесь к обсуждениям, делитесь идеями и помогайте другим пользователям Client Flow!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Футер -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="logo">
+          <span class="gradient-text">Client Flow</span>
+          <span class="version">v1.1</span>
+        </div>
+        <p>Простая и безопасная CRM для вашего бизнеса</p>
+        <p>Управляйте клиентами легко и бесплатно! Мы поддерживаем малый бизнес с 2025 года, предлагая надежное решение для управления вашими данными.</p>
+        <button class="btn gradient-btn changelog-btn" onclick="openModal('changelog-modal')" aria-label="Посмотреть изменения в версии"><span class="material-icons">history</span> Changelog</button>
+      </div>
+
+      <div class="footer-links">
+        <h4>Навигация</h4>
+        <ul>
+          <li><a href="#" class="features-link" onclick="openModal('features-modal')" aria-label="Перейти к разделу функций">Функции</a></li>
+          <li><a href="#" class="support-link" onclick="openModal('support-modal')" aria-label="Перейти к поддержке">Поддержка</a></li>
+          <li><a href="#" class="contact-link" onclick="openModal('contact-modal')" aria-label="Связаться с нами">Контакты</a></li>
+          <li><a href="community.html" class="community-link" aria-label="Перейти к сообществу">Мини Форум</a></li>
+          <li><a href="blog.html" class="blog-link" aria-label="Перейти к блогу">Блог</a></li>
+          <li><a href="referral.html" class="referral-link" aria-label="Перейти к программе Пригласи друга">Пригласи друга</a></li>
+          <li><a href="https://github.com/dev-geniy/Client-Flow" target="_blank" rel="noopener" aria-label="Посмотреть проект на GitHub">GitHub</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-contact">
+        <h4>Свяжитесь с нами</h4>
+        <p><span class="material-icons">email</span> <a href="mailto:dev_geniy_partner@protonmail.com" aria-label="Отправить email на dev_geniy_partner@protonmail.com">dev_geniy_partner@protonmail.com</a></p>
+        <p><span class="material-icons">chat</span> <a href="#" class="feedback-link" onclick="openModal('feedback-modal')" aria-label="Оставить отзыв">Оставить отзыв</a></p>
+        <p><span class="material-icons">bug_report</span> <a href="#" class="bug-report-link" onclick="openModal('bug-report-modal')" aria-label="Сообщить об ошибке">Сообщить об ошибке</a></p>
+      </div>
+
+      <div class="footer-social">
+        <h4>Сообщество</h4>
+        <div class="social-icons">
+          <a href="https://github.com/dev-geniy/Client-Flow" target="_blank" rel="noopener" aria-label="GitHub"><span class="material-icons">code</span></a>
+          <a href="https://x.com/HotDog850642" target="_blank" rel="noopener" aria-label="X"><span class="material-icons">alternate_email</span></a>
+          <a href="https://linkedin.com/company/client_flow_crm" target="_blank" rel="noopener" aria-label="LinkedIn"><span class="material-icons">business</span></a>
+          <a href="https://t.me/client_flow_crm" target="_blank" rel="noopener" aria-label="Telegram"><span class="material-icons">chat</span></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-copyright">
+        <p>© <span id="current-year"></span> Client Flow. Все права защищены.</p>
+      </div>
+      <div class="footer-legal">
+        <a href="#privacy" class="privacy-link" aria-label="Политика конфиденциальности">Политика конфиденциальности</a>
+        <a href="#terms" class="terms-link" aria-label="Условия использования">Условия использования</a>
+        <a href="#cookies" class="cookies-link" aria-label="Политика использования cookies">Cookies</a>
+      </div>
+      <div class="footer-extras">
+        <button id="back-to-top" class="btn gradient-btn" title="Вернуться наверх" aria-label="Вернуться наверх">
+          <span class="material-icons">arrow_upward</span>
+        </button>
+        <p class="powered-by">Powered by <a href="https://x.com/HotDog850642" target="_blank" rel="noopener" aria-label="DevGeniy">DevGeniy</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Модальное окно для создания темы -->
+  <div class="modal" id="create-thread-modal" role="dialog" aria-modal="true" aria-labelledby="create-thread-title">
+    <div class="modal-content glass" tabindex="0">
+      <span class="close material-icons" title="Закрыть" aria-label="Закрыть модальное окно">close</span>
+      <h2 id="create-thread-title">Создать новую тему</h2>
+      <form id="create-thread-form">
+        <input type="text" id="thread-title" placeholder="Заголовок темы" aria-label="Введите заголовок темы" required>
+        <select id="thread-category" aria-label="Выберите категорию темы" required>
+          <option value="general">Общее</option>
+          <option value="support">Поддержка</option>
+          <option value="ideas">Идеи</option>
+        </select>
+        <textarea id="thread-content" placeholder="Опишите вашу тему..." aria-label="Введите описание темы" required></textarea>
+        <div class="actions">
+          <button type="submit" class="btn gradient-btn" title="Создать тему" aria-label="Создать тему">Создать</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модальные окна для футера -->
+  <!-- Changelog -->
+  <div class="modal" id="changelog-modal" role="dialog" aria-modal="true" aria-labelledby="changelog-title">
+    <div class="modal-content glass" tabindex="0">
+      <span class="close material-icons" title="Закрыть" aria-label="Закрыть модальное окно">close</span>
+      <h2 id="changelog-title">Changelog</h2>
+      <h3>Версия 1.1</h3>
+      <ul>
+        <li>Добавлена страница сообщества с форумом.</li>
+        <li>Улучшена адаптивность для мобильных устройств.</li>
+        <li>Добавлена поддержка светлой и тёмной темы.</li>
+      </ul>
+      <h3>Версия 1.0</h3>
+      <ul>
+        <li>Запуск Client Flow.</li>
+        <li>Базовая CRM-функциональность.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Функции -->
+  <div class="modal" id="features-modal" role="dialog" aria-modal="true" aria-labelledby="features-title">
+    <div class="modal-content glass" tabindex="0">
+      <span class="close material-icons" title="Закрыть" aria-label="Закрыть модальное окно">close</span>
+      <h2 id="features-title">Функции Client Flow</h2>
+      <ul>
+        <li>Управление клиентами с помощью простой базы данных.</li>
+        <li>Экспорт данных в CSV для удобного анализа.</li>
+        <li>Поддержка тегов и категорий для организации клиентов.</li>
+        <li>Безопасное хранение данных с локальным шифрованием.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Поддержка -->
+  <div class="modal" id="support-modal" role="dialog" aria-modal="true" aria-labelledby="support-title">
+    <div class="modal-content glass" tabindex="0">
+      <span class="close material-icons" title="Закрыть" aria-label="Закрыть модальное окно">close</span>
+      <h2 id="support-title">Поддержка</h2>
+      <p>Если у вас есть вопросы или проблемы, свяжитесь с нами:</p>
+      <p>Email: <a href="mailto:dev_geniy_partner@protonmail.com">dev_geniy_partner@protonmail.com</a></p>
+      <p>Telegram: <a href="https://t.me/client_flow_crm" target="_blank" rel="noopener">t.me/client_flow_crm</a></p>
+      <p>Или посетите наше <a href="community.html">сообщество</a> для помощи от других пользователей!</p>
+    </div>
+  </div>
+
+  <!-- Контакты -->
+  <div class="modal" id="contact-modal" role="dialog" aria-modal="true" aria-labelledby="contact-title">
+    <div class="modal-content glass" tabindex="0">
+      <span class="close material-icons" title="Закрыть" aria-label="Закрыть модальное окно">close</span>
+      <h2 id="contact-title">Контакты</h2>
+      <p>Email: <a href="mailto:dev_geniy_partner@protonmail.com">dev_geniy_partner@protonmail.com</a></p>
+      <p>Telegram: <a href="https://t.me/client_flow_crm" target="_blank" rel="noopener">t.me/client_flow_crm</a></p>
+      <p>X: <a href="https://x.com/HotDog850642" target="_blank" rel="noopener">@HotDog850642</a></p>
+      <p>LinkedIn: <a href="https://linkedin.com/company/client_flow_crm" target="_blank" rel="noopener">Client Flow</a></p>
+    </div>
+  </div>
+
+  <!-- Оставить отзыв -->
+  <div class="modal" id="feedback-modal" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
+    <div class="modal-content glass" tabindex="0">
+      <span class="close material-icons" title="Закрыть" aria-label="Закрыть модальное окно">close</span>
+      <h2 id="feedback-title">Оставить отзыв</h2>
+      <form id="feedback-form">
+        <textarea id="feedback-text" placeholder="Ваш отзыв..." aria-label="Введите ваш отзыв" required></textarea>
+        <div class="actions">
+          <button type="submit" class="btn gradient-btn" title="Отправить отзыв" aria-label="Отправить отзыв">Отправить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Сообщить об ошибке -->
+  <div class="modal" id="bug-report-modal" role="dialog" aria-modal="true" aria-labelledby="bug-report-title">
+    <div class="modal-content glass" tabindex="0">
+      <span class="close material-icons" title="Закрыть" aria-label="Закрыть модальное окно">close</span>
+      <h2 id="bug-report-title">Сообщить об ошибке</h2>
+      <form id="bug-report-form">
+        <textarea id="bug-report-text" placeholder="Опишите проблему..." aria-label="Опишите проблему" required></textarea>
+        <div class="actions">
+          <button type="submit" class="btn gradient-btn" title="Отправить сообщение об ошибке" aria-label="Отправить сообщение об ошибке">Отправить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="community.js"></script>
+</body>
+</html>
