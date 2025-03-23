@@ -679,3 +679,117 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.error('Ошибка регистрации Service Worker:', err));
   });
 }
+
+// Футер - - - - - - - - - - - -
+// Set current year in copyright notice
+document.getElementById('current-year').textContent = new Date().getFullYear();
+
+// Back to Top button
+document.getElementById('back-to-top').addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// Modal handling function
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  const modalContent = modal.querySelector('.modal-content');
+  
+  // Show the modal
+  modal.style.display = 'flex';
+  
+  // Scroll to the top of the modal content
+  modalContent.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  // Focus on the modal content for accessibility
+  modalContent.focus();
+  
+  // Trap focus inside the modal
+  trapFocus(modal);
+}
+
+// Close modal function
+function closeModal(modal) {
+  modal.style.display = 'none';
+}
+
+// Close modal buttons
+document.querySelectorAll('.modal .close').forEach(closeBtn => {
+  closeBtn.addEventListener('click', () => {
+    closeModal(closeBtn.closest('.modal'));
+  });
+});
+
+// Feedback modal
+document.querySelector('.feedback-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal('feedback-modal');
+});
+
+document.getElementById('feedback-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const feedback = document.getElementById('feedback-text').value;
+  const subject = encodeURIComponent('Feedback on Client Flow');
+  const body = encodeURIComponent(`Feedback:\n${feedback}`);
+  window.location.href = `mailto:dev_geniy_partner@protonmail.com?subject=${subject}&body=${body}`;
+  showNotification('Спасибо за ваш отзыв! Отправка через ваш email-клиент...');
+  closeModal(document.getElementById('feedback-modal'));
+  e.target.reset();
+});
+
+// Bug report modal
+document.querySelector('.bug-report-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal('bug-report-modal');
+});
+
+document.getElementById('bug-report-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const bugReport = document.getElementById('bug-report-text').value;
+  const subject = encodeURIComponent('Bug Report for Client Flow');
+  const body = encodeURIComponent(`Bug Report:\n${bugReport}\n\nBrowser: ${navigator.userAgent}\nVersion: 1.1`);
+  window.location.href = `mailto:dev_geniy_partner@protonmail.com?subject=${subject}&body=${body}`;
+  showNotification('Спасибо за сообщение об ошибке! Отправка через ваш email-клиент...');
+  closeModal(document.getElementById('bug-report-modal'));
+  e.target.reset();
+});
+
+// Features modal
+document.querySelector('.features-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal('features-modal');
+});
+
+// Support modal
+document.querySelector('.support-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal('support-modal');
+});
+
+// Contact modal
+document.querySelector('.contact-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal('contact-modal');
+});
+
+// Privacy modal
+document.querySelector('.privacy-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal('privacy-modal');
+});
+
+// Terms modal
+document.querySelector('.terms-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal('terms-modal');
+});
+
+// Cookies modal
+document.querySelector('.cookies-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal('cookies-modal');
+});
+
+// Changelog modal
+document.querySelector('.changelog-btn').addEventListener('click', () => {
+  openModal('changelog-modal');
+});
