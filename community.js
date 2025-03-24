@@ -1,42 +1,13 @@
-// Инициализация Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyDsg5PpWmQt1kFH5IhhLWbJiJGg3lEZ8d0",
-    authDomain: "clientflowforum.firebaseapp.com",
-    projectId: "clientflowforum",
-    storageBucket: "clientflowforum.firebasestorage.app",
-    messagingSenderId: "353821221112",
-    appId: "1:353821221112:web:dee046f57135cc7d805b0d",
-    measurementId: "G-CE2YMXV1LK"
-  };
+const API_URL ="https://script.google.com/macros/s/AKfycbzp3tmegeMEY_7xtmHagcw1SP-mxmFpmBjNdQHbepy89rzrcoOfSV_imAY6ipp6HL9Jng/exec";
 
-// Инициализация приложения Firebase
-firebase.initializeApp(firebaseConfig);
-
-// Инициализация Firestore и Auth
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-// Анонимная аутентификация
-let currentUser = null;
-auth.signInAnonymously()
-  .then((userCredential) => {
-    currentUser = userCredential.user;
-    console.log("Анонимный пользователь вошёл:", currentUser.uid);
-    loadThreadsFromFirestore(); // Загружаем темы после входа
-  })
-  .catch((error) => {
-    console.error("Ошибка анонимной аутентификации:", error);
-  });
-
-// Инициализация темы
 document.addEventListener('DOMContentLoaded', () => {
   const isDark = localStorage.getItem('theme') === 'dark';
   document.body.classList.toggle('dark', isDark);
   document.getElementById('theme-switch').checked = isDark;
   document.getElementById('sidebar-theme-switch').checked = isDark;
+  loadThreadsFromGoogleSheets();
 });
 
-// Переключение темы
 document.getElementById('theme-switch').addEventListener('change', (e) => {
   document.body.classList.toggle('dark', e.target.checked);
   localStorage.setItem('theme', e.target.checked ? 'dark' : 'light');
@@ -49,71 +20,53 @@ document.getElementById('sidebar-theme-switch').addEventListener('change', (e) =
   document.getElementById('theme-switch').checked = e.target.checked;
 });
 
-// Переключение боковой панели
 const sidebar = document.getElementById('sidebar');
 document.querySelector('.sidebar-handle').addEventListener('click', () => {
   sidebar.classList.toggle('open');
 });
 
-// Закрытие боковой панели кликом вне неё
 document.addEventListener('click', (e) => {
   const isSidebarOpen = sidebar.classList.contains('open');
   const isClickInsideSidebar = sidebar.contains(e.target);
   const isClickOnHandle = e.target.closest('.sidebar-handle');
-
   if (isSidebarOpen && !isClickInsideSidebar && !isClickOnHandle) {
     sidebar.classList.remove('open');
   }
 });
 
-// Установка текущего года в футере
 document.getElementById('current-year').textContent = new Date().getFullYear();
 
-// Кнопка "Вернуться наверх"
 document.getElementById('back-to-top').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// Загрузка тем из Firestore
-function loadThreadsFromFirestore(filterCategory = 'all', sortBy = 'newest', searchTerm = '') {
-  let query = db.collection('threads');
-
-  // Фильтрация по категории
-  if (filterCategory !== 'all') {
-    query = query.where('category', '==', filterCategory);
-  }
-
-  // Поиск
-  if (searchTerm) {
-    query = query.where('title', '>=', searchTerm).where('title', '<=', searchTerm + '\uf8ff');
-  }
-
-  // Сортировка
-  if (sortBy === 'newest') {
-    query = query.orderBy('date', 'desc');
-  } else if (sortBy === 'oldest') {
-    query = query.orderBy('date', 'asc');
-  } else if (sortBy === 'popular') {
-    query = query.orderBy('replies', 'desc');
-  }
-
-  query.get().then((snapshot) => {
-    const threads = [];
-    snapshot.forEach((doc) => {
-      threads.push({ id: doc.id, ...doc.data() });
-    });
+async function loadThreadsFromGoogleSheets(filterCategory = 'all', sortBy = 'newest', searchTerm = '') {
+  try {
+    const response = await fetch(`${API_URL}?action=getThreads`);
+    let threads = await response.json();
+    if (filterCategory !== 'all') {
+      threads = threads.filter(thread => thread.category === filterCategory);
+    }
+    if (searchTerm) {
+      threads = threads.filter(thread => thread.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    if (sortBy === 'newest') {
+      threads.sort((a, b) => new Date(b.date) - new Date(a.date));
+    } else if (sortBy === 'oldest') {
+      threads.sort((a, b) => new Date(a.date) - new Date(b.date));
+    } else if (sortBy === 'popular') {
+      threads.sort((a, b) => b.comments.length - a.comments.length);
+    }
     loadThreads(threads);
-  }).catch((error) => {
+  } catch (error) {
     console.error("Ошибка загрузки тем:", error);
     showNotification('Ошибка загрузки тем!', 'error');
-  });
+  }
 }
 
-// Загрузка тем в интерфейс
 function loadThreads(threads) {
   const threadGrid = document.getElementById('thread-grid');
   threadGrid.innerHTML = '';
-
   threads.forEach(thread => {
     const threadCard = document.createElement('div');
     threadCard.classList.add('thread-card');
@@ -123,7 +76,7 @@ function loadThreads(threads) {
       <div class="thread-meta">
         <span class="author"><span class="material-icons">person</span> ${thread.author}</span>
         <span class="date">${thread.date}</span>
-        <span class="replies"><span class="material-icons">chat_bubble</span> ${thread.replies}</span>
+        <span class="replies"><span class="material-icons">chat_bubble</span> ${thread.comments.length}</span>
       </div>
       <div class="thread-category">${thread.category === 'general' ? 'Общее' : thread.category === 'support' ? 'Поддержка' : 'Идеи'}</div>
       <div class="thread-content">${thread.content}</div>
@@ -132,7 +85,14 @@ function loadThreads(threads) {
       </div>
       <div class="thread-comments" id="comments_${thread.id}" style="display: none;">
         <h4>Комментарии</h4>
-        <div class="comment-list" id="comment-list_${thread.id}"></div>
+        <div class="comment-list" id="comment-list_${thread.id}">
+          ${thread.comments.map(comment => `
+            <div class="comment">
+              <p><strong>${comment.user}</strong> (${new Date(comment.timestamp).toLocaleString()}):</p>
+              <p>${comment.text}</p>
+            </div>
+          `).join('')}
+        </div>
         <form class="comment-form" data-thread-id="${thread.id}">
           <textarea placeholder="Ваш комментарий..." required></textarea>
           <button type="submit" class="btn gradient-btn">Отправить</button>
@@ -140,83 +100,41 @@ function loadThreads(threads) {
       </div>
     `;
     threadGrid.appendChild(threadCard);
-
-    // Открытие/закрытие комментариев
     threadCard.querySelector('.view-thread-btn').addEventListener('click', () => {
       const commentsSection = threadCard.querySelector('.thread-comments');
-      if (commentsSection.style.display === 'none') {
-        commentsSection.style.display = 'block';
-        loadComments(thread.id);
-      } else {
-        commentsSection.style.display = 'none';
-      }
+      commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
     });
-
-    // Обработка отправки комментария
-    threadCard.querySelector('.comment-form').addEventListener('submit', (e) => {
+    threadCard.querySelector('.comment-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const content = e.target.querySelector('textarea').value;
-      addComment(thread.id, content);
+      await addComment(thread.id, content);
       e.target.reset();
     });
   });
 }
 
-// Загрузка комментариев
-function loadComments(threadId) {
-  const commentList = document.getElementById(`comment-list_${threadId}`);
-  commentList.innerHTML = '';
-
-  db.collection('threads').doc(threadId).collection('comments')
-    .orderBy('timestamp', 'asc')
-    .get()
-    .then((snapshot) => {
-      snapshot.forEach((doc) => {
-        const comment = doc.data();
-        const commentDiv = document.createElement('div');
-        commentDiv.classList.add('comment');
-        commentDiv.innerHTML = `
-          <p><strong>${comment.author}</strong> (${new Date(comment.timestamp.toDate()).toLocaleString()}):</p>
-          <p>${comment.content}</p>
-        `;
-        commentList.appendChild(commentDiv);
-      });
-    })
-    .catch((error) => {
-      console.error("Ошибка загрузки комментариев:", error);
+async function addComment(threadId, content) {
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: `action=addComment&threadId=${encodeURIComponent(threadId)}&comment=${encodeURIComponent(content)}&user=Anonymous`
     });
-}
-
-// Добавление комментария
-function addComment(threadId, content) {
-  if (!currentUser) {
-    showNotification('Пожалуйста, войдите, чтобы оставить комментарий!', 'error');
-    return;
-  }
-
-  const comment = {
-    author: currentUser.uid.substring(0, 8), // Используем часть UID как имя
-    content: content,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-  };
-
-  db.collection('threads').doc(threadId).collection('comments')
-    .add(comment)
-    .then(() => {
-      // Увеличиваем счётчик ответов
-      db.collection('threads').doc(threadId).update({
-        replies: firebase.firestore.FieldValue.increment(1)
-      });
-      loadComments(threadId);
+    const result = await response.json();
+    if (result.success) {
       showNotification('Комментарий добавлен!');
-    })
-    .catch((error) => {
-      console.error("Ошибка добавления комментария:", error);
-      showNotification('Ошибка добавления комментария!', 'error');
-    });
+      loadThreadsFromGoogleSheets();
+    } else {
+      showNotification('Ошибка добавления комментария: ' + (result.error || 'Неизвестная ошибка'), 'error');
+    }
+  } catch (error) {
+    console.error("Ошибка добавления комментария:", error);
+    showNotification('Ошибка добавления комментария: ' + error.message, 'error');
+  }
 }
 
-// Фильтрация тем по категории
 document.querySelectorAll('.category-filter').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.category-filter').forEach(b => b.classList.remove('active'));
@@ -224,101 +142,76 @@ document.querySelectorAll('.category-filter').forEach(btn => {
     const category = btn.getAttribute('data-category');
     const sortBy = document.getElementById('sort-threads').value;
     const searchTerm = document.getElementById('thread-search').value.toLowerCase();
-    loadThreadsFromFirestore(category, sortBy, searchTerm);
+    loadThreadsFromGoogleSheets(category, sortBy, searchTerm);
   });
 });
 
-// Сортировка тем
 document.getElementById('sort-threads').addEventListener('change', (e) => {
   const sortBy = e.target.value;
   const activeCategory = document.querySelector('.category-filter.active').getAttribute('data-category');
   const searchTerm = document.getElementById('thread-search').value.toLowerCase();
-  loadThreadsFromFirestore(activeCategory, sortBy, searchTerm);
+  loadThreadsFromGoogleSheets(activeCategory, sortBy, searchTerm);
 });
 
-// Поиск по темам
 document.getElementById('thread-search').addEventListener('input', (e) => {
   const searchTerm = e.target.value.toLowerCase();
   const activeCategory = document.querySelector('.category-filter.active').getAttribute('data-category');
   const sortBy = document.getElementById('sort-threads').value;
-  loadThreadsFromFirestore(activeCategory, sortBy, searchTerm);
+  loadThreadsFromGoogleSheets(activeCategory, sortBy, searchTerm);
 });
 
-// Создание новой темы
 document.getElementById('create-thread-btn').addEventListener('click', () => {
-  if (!currentUser) {
-    showNotification('Пожалуйста, войдите, чтобы создать тему!', 'error');
-    return;
-  }
   openModal('create-thread-modal');
 });
 
-document.getElementById('create-thread-form').addEventListener('submit', (e) => {
+document.getElementById('create-thread-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const title = document.getElementById('thread-title').value;
   const category = document.getElementById('thread-category').value;
   const content = document.getElementById('thread-content').value;
 
-  const newThread = {
-    title,
-    category,
-    author: currentUser.uid.substring(0, 8), // Используем часть UID как имя
-    date: new Date().toISOString().split('T')[0],
-    content,
-    replies: 0,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-  };
+  if (!title || !category || !content) {
+    showNotification('Заполните все поля!', 'error');
+    return;
+  }
 
-  db.collection('threads').add(newThread)
-    .then(() => {
-      loadThreadsFromFirestore();
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: `action=addThread&title=${encodeURIComponent(title)}&category=${encodeURIComponent(category)}&content=${encodeURIComponent(content)}&author=Anonymous`
+    });
+    const result = await response.json();
+    if (result.success) {
+      loadThreadsFromGoogleSheets();
       closeModal(document.getElementById('create-thread-modal'));
       showNotification('Тема успешно создана!');
       e.target.reset();
-    })
-    .catch((error) => {
-      console.error("Ошибка создания темы:", error);
-      showNotification('Ошибка создания темы!', 'error');
-    });
+    } else {
+      showNotification('Ошибка создания темы: ' + (result.error || 'Неизвестная ошибка'), 'error');
+    }
+  } catch (error) {
+    console.error("Ошибка создания темы:", error);
+    showNotification('Ошибка создания темы: ' + error.message, 'error');
+  }
 });
 
-// Обработка формы "Оставить отзыв"
 document.getElementById('feedback-form').addEventListener('submit', (e) => {
   e.preventDefault();
-  const feedbackText = document.getElementById('feedback-text').value;
-  db.collection('feedback').add({
-    text: feedbackText,
-    userId: currentUser ? currentUser.uid : 'anonymous',
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-  }).then(() => {
-    closeModal(document.getElementById('feedback-modal'));
-    showNotification('Спасибо за ваш отзыв!');
-    e.target.reset();
-  }).catch((error) => {
-    console.error("Ошибка отправки отзыва:", error);
-    showNotification('Ошибка отправки отзыва!', 'error');
-  });
+  closeModal(document.getElementById('feedback-modal'));
+  showNotification('Спасибо за ваш отзыв!');
+  e.target.reset();
 });
 
-// Обработка формы "Сообщить об ошибке"
 document.getElementById('bug-report-form').addEventListener('submit', (e) => {
   e.preventDefault();
-  const bugText = document.getElementById('bug-report-text').value;
-  db.collection('bug-reports').add({
-    text: bugText,
-    userId: currentUser ? currentUser.uid : 'anonymous',
-    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-  }).then(() => {
-    closeModal(document.getElementById('bug-report-modal'));
-    showNotification('Спасибо за сообщение об ошибке!');
-    e.target.reset();
-  }).catch((error) => {
-    console.error("Ошибка отправки сообщения об ошибке:", error);
-    showNotification('Ошибка отправки сообщения об ошибке!', 'error');
-  });
+  closeModal(document.getElementById('bug-report-modal'));
+  showNotification('Спасибо за сообщение об ошибке!');
+  e.target.reset();
 });
 
-// Функции для модального окна
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
   const modalContent = modal.querySelector('.modal-content');
@@ -338,7 +231,6 @@ document.querySelectorAll('.modal .close').forEach(closeBtn => {
   });
 });
 
-// Уведомления
 function showNotification(message, type = 'success') {
   const notification = document.createElement('div');
   notification.className = `notification ${type}`;
@@ -355,12 +247,10 @@ function showNotification(message, type = 'success') {
   }, 3000);
 }
 
-// Ограничение фокуса в модальном окне
 function trapFocus(modal) {
   const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
   const firstElement = focusableElements[0];
   const lastElement = focusableElements[focusableElements.length - 1];
-
   modal.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
       if (e.shiftKey) {
@@ -377,3 +267,21 @@ function trapFocus(modal) {
     }
   });
 }
+
+// Privacy modal
+document.querySelector('.privacy-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal('privacy-modal');
+});
+
+// Terms modal
+document.querySelector('.terms-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal('terms-modal');
+});
+
+// Cookies modal
+document.querySelector('.cookies-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  openModal('cookies-modal');
+});
