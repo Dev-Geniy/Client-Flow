@@ -396,6 +396,19 @@
       <p>Если у вас есть вопросы о нашей политике использования cookies, свяжитесь с нами по адресу <a href="mailto:dev_geniy_partner@protonmail.com">dev_geniy_partner@protonmail.com</a>.</p>
     </div>
   </div>
+  
+  <div id="confirm-reset-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Подтверждение</h2>
+    <p>Вы уверены, что хотите обновить ссылку? ВСЕ ДАННЫЕ БУДУТ УТЕРЯНЫ: Статистика переходов, Рефералы, Награды, Бонусы!</p>
+    <div class="modal-buttons">
+      <button class="btn gradient-btn" onclick="confirmResetLink()">Подтвердить</button>
+      <button class="btn" onclick="closeModal(document.getElementById('confirm-reset-modal'))">Отменить</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
