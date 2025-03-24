@@ -351,17 +351,30 @@ function resetStats() {
     });
 }
 
-// Функция генерации новой реферальной ссылки
+// Функция генерации новой реферальной ссылки с подтверждением
 function generateNewReferralLink() {
+  const modal = document.getElementById('confirm-reset-modal');
+  if (modal) {
+    openModal('confirm-reset-modal');
+  } else {
+    console.error('Модальное окно подтверждения не найдено');
+    showNotification('Ошибка: модальное окно недоступно.', 'error');
+  }
+}
+
+// Подтверждение сброса ссылки
+function confirmResetLink() {
   const newCode = generateReferralCode();
   const oldCode = localStorage.getItem('referralCode');
+  const db = firebase.database();
+
   if (oldCode) {
-    const db = firebase.database();
     db.ref(`referrals/${oldCode}`).remove()
       .then(() => {
         localStorage.setItem('referralCode', newCode);
         localStorage.removeItem(`referralStats_${oldCode}`);
         initializeReferralProgram();
+        closeModal(document.getElementById('confirm-reset-modal'));
         showNotification('Новая реферальная ссылка сгенерирована!');
       })
       .catch((error) => {
@@ -371,6 +384,7 @@ function generateNewReferralLink() {
   } else {
     localStorage.setItem('referralCode', newCode);
     initializeReferralProgram();
+    closeModal(document.getElementById('confirm-reset-modal'));
     showNotification('Новая реферальная ссылка сгенерирована!');
   }
 }
