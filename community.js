@@ -81,7 +81,7 @@ function loadThreads(threads) {
       <div class="thread-category">${thread.category === 'general' ? 'Общее' : thread.category === 'support' ? 'Поддержка' : 'Идеи'}</div>
       <div class="thread-content">${thread.content}</div>
       <div class="thread-actions">
-        <button class="btn view-thread-btn" data-thread-id="${thread.id}">Открыть</button>
+        <button class="btn view-thread-btn" data-thread-id="${thread.id}">Читать | Написать </button>
       </div>
       <div class="thread-comments" id="comments_${thread.id}" style="display: none;">
         <h4>Комментарии</h4>
