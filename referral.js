@@ -76,21 +76,31 @@ document.querySelectorAll('.modal .close').forEach(closeBtn => {
   });
 });
 
-// Уведомления
+// Уведомления с возможностью закрытия
 function showNotification(message, type = 'success') {
   const notification = document.createElement('div');
   notification.className = `notification ${type}`;
   notification.textContent = message;
+  notification.dataset.active = 'true'; // Добавляем флаг активности
   document.body.appendChild(notification);
   setTimeout(() => {
     notification.classList.add('active');
   }, 10);
+  // Автоматическое закрытие через 3 секунды
   setTimeout(() => {
+    closeNotification(notification);
+  }, 3000);
+  return notification; // Возвращаем элемент для возможности ручного закрытия
+}
+
+function closeNotification(notification) {
+  if (notification && notification.dataset.active === 'true') {
     notification.classList.remove('active');
+    notification.dataset.active = 'false';
     setTimeout(() => {
       notification.remove();
     }, 300);
-  }, 3000);
+  }
 }
 
 // Ограничение фокуса в модальном окне
@@ -148,7 +158,6 @@ function initializeReferralProgram() {
     localStorage.setItem('referralCode', referralCode);
   }
 
-  // Устанавливаем реферальную ссылку в новом формате только для отображения
   const referralLinkInput = document.getElementById('referral-link');
   referralLinkInput.value = `https://dev-geniy.github.io/Client-Flow/referral.html?ref=${referralCode}`;
 
@@ -164,10 +173,10 @@ function initializeReferralProgram() {
     showNotification('Не удалось загрузить статистику. Попробуйте позже.', 'error');
   });
 
-  // Проверка перехода по реферальной ссылке (старый формат для Firebase)
-  const urlPath = window.location.pathname.split('/').pop();
-  const refCode = urlPath && urlPath !== 'referral.html' ? urlPath : null;
-  if (refCode && refCode !== referralCode) {
+  // Проверка перехода по реферальной ссылке через параметр ?ref=
+  const urlParams = new URLSearchParams(window.location.search);
+  const refCode = urlParams.get('ref');
+  if (refCode && refCode !== referralCode && window.location.pathname.endsWith('referral.html')) {
     const visitorId = localStorage.getItem('visitorId') || generateReferralCode();
     localStorage.setItem('visitorId', visitorId);
 
@@ -188,16 +197,16 @@ function initializeReferralProgram() {
           }
         });
 
+        const referralNotification = showNotification('Вы перешли по реферальной ссылке!');
         document.querySelector('.referral-section').insertAdjacentHTML('beforeend', `
           <div class="referral-card confirm-card">
             <h3>Подтвердите регистрацию</h3>
             <p>Вы перешли по реферальной ссылке! Подтвердите, чтобы ваш друг получил бонус.</p>
-            <button class="btn gradient-btn confirm-btn" onclick="confirmReferral('${refCode}')">
+            <button class="btn gradient-btn confirm-btn" onclick="confirmReferral('${refCode}', '${referralNotification.id}')">
               Подтвердить
             </button>
           </div>
         `);
-        showNotification('Вы перешли по реферальной ссылке!');
       }
     }, (error) => {
       console.error('Ошибка проверки посетителя:', error);
@@ -207,7 +216,7 @@ function initializeReferralProgram() {
 }
 
 // Подтверждение регистрации
-function confirmReferral(refCode) {
+function confirmReferral(refCode, notificationId) {
   const db = firebase.database();
   const referralRef = db.ref(`referrals/${refCode}`);
 
@@ -265,6 +274,9 @@ function confirmReferral(refCode) {
     }
   });
 
+  // Закрываем уведомление и карточку
+  const notification = document.querySelector(`.notification[data-active="true"]`);
+  if (notification) closeNotification(notification);
   document.querySelector('.confirm-card').remove();
   showNotification('Спасибо за регистрацию! Ваш друг получил бонус.');
 }
@@ -331,7 +343,7 @@ function animateValue(element, start, end, duration, suffix = '') {
   window.requestAnimationFrame(step);
 }
 
-// Функция копирования реферальной ссылки (новый формат)
+// Функция копирования реферальной ссылки
 function copyReferralLink() {
   const referralCode = localStorage.getItem('referralCode');
   const referralLink = `https://dev-geniy.github.io/Client-Flow/referral.html?ref=${referralCode}`;
@@ -343,7 +355,7 @@ function copyReferralLink() {
   });
 }
 
-// Функция шаринга реферальной ссылки (новый формат)
+// Функция шаринга реферальной ссылки
 function shareReferralLink() {
   const referralCode = localStorage.getItem('referralCode');
   const referralLink = `https://dev-geniy.github.io/Client-Flow/referral.html?ref=${referralCode}`;
@@ -394,7 +406,7 @@ function generateNewReferralLink() {
     db.ref(`referrals/${oldCode}`).remove()
       .then(() => {
         localStorage.setItem('referralCode', newCode);
-        localStorage.removeItem(`referralStats_${oldCode}`); // Исправлено на oldCode
+        localStorage.removeItem(`referralStats_${oldCode}`);
         initializeReferralProgram();
         showNotification('Новая реферальная ссылка сгенерирована!');
       })
