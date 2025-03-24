@@ -4,11 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Партнёрская программа Client Flow</title>
-  
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-  
   <link rel="stylesheet" href="referral.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -109,6 +104,7 @@
     <li>3 друга: Эксклюзивный значок "Партнёр" в вашем профиле.</li>
     <li>5 друзей: Годовая подписка на Client Flow!</li>
     <li>10 друзей: 500 бонусных баллов для использования в Client Flow.</li>
+    <li>25 друзей: Эксклюзивная тема оформления для Client Flow.</li>
     <li>Каждый друг: +30 дней бесплатного доступа к премиум-функциям.</li>
   </ul>
 </div>
@@ -263,7 +259,16 @@
       <p>Следите за обновлениями в нашем <a href="https://t.me/client_flow_crm" target="_blank" rel="noopener">Telegram-канале</a> или на <a href="https://x.com/HotDog850642" target="_blank" rel="noopener">X</a>!</p>
     </div>
   </div>
-
+  
+  <!-- Поздравительное окно Modal -->
+  <div id="bonus-modal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Поздравляем!</h2>
+    <p id="bonus-message"></p>
+  </div>
+</div>
+  
   <!-- Features Modal -->
   <div class="modal" id="features-modal" role="dialog" aria-modal="true" aria-labelledby="features-title">
     <div class="modal-content glass" tabindex="0">
@@ -388,12 +393,16 @@
       <p>Если у вас есть вопросы о нашей политике использования cookies, свяжитесь с нами по адресу <a href="mailto:dev_geniy_partner@protonmail.com">dev_geniy_partner@protonmail.com</a>.</p>
     </div>
   </div>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script>
   // Инициализация Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyD3Sqbuy2Swcdemr0H_qHr6EBT5UGv2JQc",
     authDomain: "client-flow-beta.firebaseapp.com",
-    databaseURL: "https://client-flow-beta-default-rtdb.firebaseio.com", // Добавляем databaseURL
+    databaseURL: "https://client-flow-beta-default-rtdb.firebaseio.com",
     projectId: "client-flow-beta",
     storageBucket: "client-flow-beta.firebasestorage.app",
     messagingSenderId: "838413488663",
