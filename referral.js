@@ -2,8 +2,10 @@
 document.addEventListener('DOMContentLoaded', () => {
   const isDark = localStorage.getItem('theme') === 'dark';
   document.body.classList.toggle('dark', isDark);
-  document.getElementById('theme-switch') && (document.getElementById('theme-switch').checked = isDark);
-  document.getElementById('sidebar-theme-switch') && (document.getElementById('sidebar-theme-switch').checked = isDark);
+  const themeSwitch = document.getElementById('theme-switch');
+  const sidebarThemeSwitch = document.getElementById('sidebar-theme-switch');
+  if (themeSwitch) themeSwitch.checked = isDark;
+  if (sidebarThemeSwitch) sidebarThemeSwitch.checked = isDark;
 
   if (typeof firebase === 'undefined') {
     console.error('Firebase не инициализирован. Проверьте подключение Firebase SDK.');
@@ -11,27 +13,28 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  firebase.auth().signInAnonymously().then((userCredential) => {
-    console.log('Успешная авторизация:', userCredential);
-    initializeReferralProgram();
-  }).catch((error) => {
-    console.error('Ошибка авторизации:', error.code, error.message);
-    showNotification(`Не удалось авторизоваться. Код ошибки: ${error.code}`, 'error');
-  });
+  firebase.auth().signInAnonymously()
+    .then((userCredential) => {
+      console.log('Успешная авторизация:', userCredential);
+      initializeReferralProgram();
+    })
+    .catch((error) => {
+      console.error('Ошибка авторизации:', error.code, error.message);
+      showNotification(`Не удалось авторизоваться. Код ошибки: ${error.code}`, 'error');
+    });
 });
 
 // Переключение темы
-document.getElementById('theme-switch')?.addEventListener('change', (e) => {
+const toggleTheme = (e) => {
   document.body.classList.toggle('dark', e.target.checked);
   localStorage.setItem('theme', e.target.checked ? 'dark' : 'light');
-  document.getElementById('sidebar-theme-switch') && (document.getElementById('sidebar-theme-switch').checked = e.target.checked);
-});
+  const otherSwitch = e.target.id === 'theme-switch' ? 'sidebar-theme-switch' : 'theme-switch';
+  const otherElement = document.getElementById(otherSwitch);
+  if (otherElement) otherElement.checked = e.target.checked;
+};
 
-document.getElementById('sidebar-theme-switch')?.addEventListener('change', (e) => {
-  document.body.classList.toggle('dark', e.target.checked);
-  localStorage.setItem('theme', e.target.checked ? 'dark' : 'light');
-  document.getElementById('theme-switch') && (document.getElementById('theme-switch').checked = e.target.checked);
-});
+document.getElementById('theme-switch')?.addEventListener('change', toggleTheme);
+document.getElementById('sidebar-theme-switch')?.addEventListener('change', toggleTheme);
 
 // Переключение боковой панели
 const sidebar = document.getElementById('sidebar');
@@ -51,7 +54,8 @@ if (sidebar) {
 }
 
 // Установка текущего года в футере
-document.getElementById('current-year') && (document.getElementById('current-year').textContent = new Date().getFullYear());
+const currentYear = document.getElementById('current-year');
+if (currentYear) currentYear.textContent = new Date().getFullYear();
 
 // Кнопка "Вернуться наверх"
 document.getElementById('back-to-top')?.addEventListener('click', () => {
@@ -74,9 +78,7 @@ function closeModal(modal) {
 }
 
 document.querySelectorAll('.modal .close').forEach(closeBtn => {
-  closeBtn.addEventListener('click', () => {
-    closeModal(closeBtn.closest('.modal'));
-  });
+  closeBtn.addEventListener('click', () => closeModal(closeBtn.closest('.modal')));
 });
 
 // Уведомления с возможностью закрытия
@@ -86,12 +88,8 @@ function showNotification(message, type = 'success') {
   notification.textContent = message;
   notification.dataset.active = 'true';
   document.body.appendChild(notification);
-  setTimeout(() => {
-    notification.classList.add('active');
-  }, 10);
-  setTimeout(() => {
-    closeNotification(notification);
-  }, 3000);
+  setTimeout(() => notification.classList.add('active'), 10);
+  setTimeout(() => closeNotification(notification), 3000);
   return notification;
 }
 
@@ -99,9 +97,7 @@ function closeNotification(notification) {
   if (notification && notification.dataset.active === 'true') {
     notification.classList.remove('active');
     notification.dataset.active = 'false';
-    setTimeout(() => {
-      notification.remove();
-    }, 300);
+    setTimeout(() => notification.remove(), 300);
   }
 }
 
@@ -112,16 +108,12 @@ function trapFocus(modal) {
   const lastElement = focusableElements[focusableElements.length - 1];
   modal.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        }
-      } else {
-        if (document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
       }
     }
   });
@@ -145,11 +137,7 @@ document.getElementById('bug-report-form')?.addEventListener('submit', (e) => {
 // Генерация уникального реферального кода
 function generateReferralCode() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let code = '';
-  for (let i = 0; i < 8; i++) {
-    code += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return code;
+  return Array.from({ length: 8 }, () => characters.charAt(Math.floor(Math.random() * characters.length))).join('');
 }
 
 // Инициализация реферальной программы
@@ -173,19 +161,14 @@ function initializeReferralProgram() {
     localStorage.setItem(`referralStats_${referralCode}`, JSON.stringify(data));
     updateDashboard(data);
 
-    // Проверка и отображение ожидающих наград
-    if (data.pendingRewards && data.pendingRewards.length > 0) {
+    if (data.pendingRewards?.length > 0) {
       const bonusModal = document.getElementById('bonus-modal');
       if (bonusModal) {
         document.getElementById('bonus-message').textContent = data.pendingRewards.join('\n');
         bonusModal.style.display = 'flex';
         trapFocus(bonusModal);
-
-        // Очистка показанных наград после отображения
         referralRef.update({ pendingRewards: [] }, (error) => {
-          if (error) {
-            console.error('Ошибка очистки pendingRewards:', error);
-          }
+          if (error) console.error('Ошибка очистки pendingRewards:', error);
         });
       }
     }
@@ -194,7 +177,7 @@ function initializeReferralProgram() {
     showNotification('Не удалось загрузить статистику. Попробуйте позже.', 'error');
   });
 
-  // Проверка перехода по реферальной ссылке через параметр ?ref=
+  // Автоматическое зачисление рефералов
   const urlParams = new URLSearchParams(window.location.search);
   const refCode = urlParams.get('ref');
   if (refCode && refCode !== referralCode) {
@@ -206,34 +189,55 @@ function initializeReferralProgram() {
       if (!snapshot.exists()) {
         refReferralRef.transaction((currentData) => {
           if (!currentData) {
-            return { clicks: 1, friends: 0, bonuses: 0, rewards: [], visitors: { [visitorId]: true }, pendingRewards: [] };
+            return { clicks: 1, friends: 1, bonuses: 1, rewards: [], visitors: { [visitorId]: true }, pendingRewards: ['Ваш первый реферал!'] };
           }
           currentData.clicks = (currentData.clicks || 0) + 1;
+          currentData.friends = (currentData.friends || 0) + 1;
+          currentData.bonuses = (currentData.bonuses || 0) + 1;
           currentData.visitors = currentData.visitors || {};
           currentData.visitors[visitorId] = true;
+
+          const friends = currentData.friends;
+          const rewards = currentData.rewards || [];
+          const pendingRewards = currentData.pendingRewards || [];
+
+          if (friends >= 25 && !rewards.includes('exclusive_theme')) {
+            rewards.push('exclusive_theme');
+            pendingRewards.push('Вы получили эксклюзивную тему оформления!');
+          } else if (friends >= 20 && !rewards.includes('consultation')) {
+            rewards.push('consultation');
+            pendingRewards.push('Вы заработали бесплатную консультацию!');
+          } else if (friends >= 15 && !rewards.includes('vip_status')) {
+            rewards.push('vip_status');
+            pendingRewards.push('Вы получили VIP-статус!');
+          } else if (friends >= 10 && !rewards.includes('500_points')) {
+            rewards.push('500_points');
+            pendingRewards.push('Вы заработали 500 бонусных баллов!');
+          } else if (friends >= 5 && !rewards.includes('year_subscription')) {
+            rewards.push('year_subscription');
+            pendingRewards.push('Вы заработали годовую подписку!');
+          } else if (friends >= 3 && !rewards.includes('partner_badge')) {
+            rewards.push('partner_badge');
+            pendingRewards.push('Вы заработали значок "Партнёр"!');
+          }
+
+          if (Math.random() < 0.1 && !rewards.includes(`random_bonus_${friends}`)) {
+            rewards.push(`random_bonus_${friends}`);
+            currentData.bonuses += 0.33;
+            pendingRewards.push('Вы получили случайный бонус: +10 дней премиума!');
+          }
+
+          currentData.rewards = rewards;
+          currentData.pendingRewards = pendingRewards;
+
           return currentData;
         }, (error) => {
           if (error) {
-            console.error('Ошибка транзакции (clicks):', error);
+            console.error('Ошибка транзакции:', error);
             showNotification('Не удалось записать данные. Попробуйте снова.', 'error');
           }
         });
-
-        // Добавляем карточку подтверждения только на referral.html
-        if (window.location.pathname.endsWith('referral.html')) {
-          const referralNotification = showNotification('Вы перешли по реферальной ссылке!');
-          document.querySelector('.referral-section')?.insertAdjacentHTML('beforeend', `
-            <div class="referral-card confirm-card">
-              <h3>Подтвердите регистрацию</h3>
-              <p>Вы перешли по реферальной ссылке! Подтвердите, чтобы ваш друг получил бонус.</p>
-              <button class="btn gradient-btn confirm-btn" onclick="confirmReferral('${refCode}', '${referralNotification.id}')">
-                Подтвердить
-              </button>
-            </div>
-          `);
-        } else {
-          showNotification('Вы перешли по реферальной ссылке! Перейдите в раздел "Пригласи друга" для подтверждения.');
-        }
+        showNotification('Вы перешли по реферальной ссылке! Вашему другу начислен бонус.');
       }
     }, (error) => {
       console.error('Ошибка проверки посетителя:', error);
@@ -242,116 +246,46 @@ function initializeReferralProgram() {
   }
 }
 
-// Подтверждение регистрации
-function confirmReferral(refCode, notificationId) {
-  const db = firebase.database();
-  const referralRef = db.ref(`referrals/${refCode}`);
-
-  referralRef.transaction((currentData) => {
-    if (!currentData) {
-      return { clicks: 1, friends: 1, bonuses: 1, rewards: [], visitors: {}, pendingRewards: ['Ваш первый реферал!'] };
-    }
-    currentData.friends = (currentData.friends || 0) + 1;
-    currentData.bonuses = (currentData.bonuses || 0) + 1;
-
-    const friends = currentData.friends;
-    const rewards = currentData.rewards || [];
-    const pendingRewards = currentData.pendingRewards || [];
-    let bonusMessage = null;
-
-    if (friends >= 25 && !rewards.includes('exclusive_theme')) {
-      rewards.push('exclusive_theme');
-      pendingRewards.push('Вы получили эксклюзивную тему оформления!');
-    } else if (friends >= 20 && !rewards.includes('consultation')) {
-      rewards.push('consultation');
-      pendingRewards.push('Вы заработали бесплатную консультацию!');
-    } else if (friends >= 15 && !rewards.includes('vip_status')) {
-      rewards.push('vip_status');
-      pendingRewards.push('Вы получили VIP-статус!');
-    } else if (friends >= 10 && !rewards.includes('500_points')) {
-      rewards.push('500_points');
-      pendingRewards.push('Вы заработали 500 бонусных баллов!');
-    } else if (friends >= 5 && !rewards.includes('year_subscription')) {
-      rewards.push('year_subscription');
-      pendingRewards.push('Вы заработали годовую подписку!');
-    } else if (friends >= 3 && !rewards.includes('partner_badge')) {
-      rewards.push('partner_badge');
-      pendingRewards.push('Вы заработали значок "Партнёр"!');
-    }
-
-    if (Math.random() < 0.1 && !rewards.includes(`random_bonus_${friends}`)) {
-      rewards.push(`random_bonus_${friends}`);
-      currentData.bonuses += 0.33;
-      pendingRewards.push('Вы получили случайный бонус: +10 дней премиума!');
-    }
-
-    currentData.rewards = rewards;
-    currentData.pendingRewards = pendingRewards;
-
-    return currentData;
-  }, (error) => {
-    if (error) {
-      console.error('Ошибка транзакции (confirmReferral):', error);
-      showNotification('Не удалось начислить бонус. Попробуйте снова.', 'error');
-    }
-  });
-
-  const notification = document.querySelector(`.notification[data-active="true"]`);
-  if (notification) closeNotification(notification);
-  document.querySelector('.confirm-card')?.remove();
-  showNotification('Спасибо за регистрацию! Ваш друг получил бонус.');
-}
-
 // Обновление дашборда с анимацией
 function updateDashboard(stats) {
-  const clicksCount = document.getElementById('clicks-count');
-  const friendsCount = document.getElementById('friends-count');
-  const progressToBonus = document.getElementById('progress-to-bonus');
-  const progressFill = document.getElementById('progress-fill');
-  const bonusesEarned = document.getElementById('bonuses-earned');
-  const rewardsList = document.getElementById('rewards-list');
+  const elements = {
+    clicksCount: document.getElementById('clicks-count'),
+    friendsCount: document.getElementById('friends-count'),
+    progressToBonus: document.getElementById('progress-to-bonus'),
+    progressFill: document.getElementById('progress-fill'),
+    bonusesEarned: document.getElementById('bonuses-earned'),
+    rewardsList: document.getElementById('rewards-list')
+  };
 
-  if (clicksCount) animateValue(clicksCount, parseInt(clicksCount.textContent) || 0, stats.clicks, 500);
-  if (friendsCount) animateValue(friendsCount, parseInt(friendsCount.textContent) || 0, stats.friends, 500);
-  if (bonusesEarned) animateValue(bonusesEarned, parseInt(bonusesEarned.textContent) || 0, Math.floor(stats.bonuses * 30), 500, ' дней премиума');
+  if (elements.clicksCount) animateValue(elements.clicksCount, parseInt(elements.clicksCount.textContent) || 0, stats.clicks, 500);
+  if (elements.friendsCount) animateValue(elements.friendsCount, parseInt(elements.friendsCount.textContent) || 0, stats.friends, 500);
+  if (elements.bonusesEarned) animateValue(elements.bonusesEarned, parseInt(elements.bonusesEarned.textContent) || 0, Math.floor(stats.bonuses * 30), 500, ' дней премиума');
 
   const friends = stats.friends;
-  let nextLevel = 3;
-  if (friends >= 25) nextLevel = Infinity;
-  else if (friends >= 20) nextLevel = 25;
-  else if (friends >= 15) nextLevel = 20;
-  else if (friends >= 10) nextLevel = 15;
-  else if (friends >= 5) nextLevel = 10;
-  else if (friends >= 3) nextLevel = 5;
+  const nextLevel = friends >= 25 ? Infinity : [20, 15, 10, 5, 3].find(level => friends < level) || 3;
 
-  if (progressToBonus) {
+  if (elements.progressToBonus) {
     const friendsRemaining = Math.max(0, nextLevel - friends);
-    progressToBonus.textContent = nextLevel === Infinity ? 'Все бонусы получены!' : `${friendsRemaining} ${friendsRemaining === 1 ? 'друг' : 'друзей'}`;
+    elements.progressToBonus.textContent = nextLevel === Infinity ? 'Все бонусы получены!' : `${friendsRemaining} ${friendsRemaining === 1 ? 'друг' : 'друзей'}`;
   }
 
-  if (progressFill) {
+  if (elements.progressFill) {
     const progressPercentage = nextLevel === Infinity ? 100 : (friends / nextLevel) * 100;
-    progressFill.style.width = `${Math.min(progressPercentage, 100)}%`;
+    elements.progressFill.style.width = `${Math.min(progressPercentage, 100)}%`;
   }
 
-  if (rewardsList) {
-    rewardsList.innerHTML = '';
-    const rewards = stats.rewards || [];
-    if (rewards.length === 0) {
-      rewardsList.innerHTML = '<li>Пока нет наград. Приглашайте друзей!</li>';
-    } else {
-      rewards.forEach(reward => {
-        let rewardText = '';
-        if (reward === 'exclusive_theme') rewardText = 'Эксклюзивная тема оформления (25 друзей)';
-        else if (reward === 'consultation') rewardText = 'Бесплатная консультация (20 друзей)';
-        else if (reward === 'vip_status') rewardText = 'VIP-статус (15 друзей)';
-        else if (reward === '500_points') rewardText = '500 бонусных баллов (10 друзей)';
-        else if (reward === 'year_subscription') rewardText = 'Годовая подписка (5 друзей)';
-        else if (reward === 'partner_badge') rewardText = 'Значок "Партнёр" (3 друга)';
-        else if (reward.startsWith('random_bonus')) rewardText = 'Случайный бонус: +10 дней премиума';
-        rewardsList.innerHTML += `<li>${rewardText}</li>`;
-      });
-    }
+  if (elements.rewardsList) {
+    elements.rewardsList.innerHTML = stats.rewards?.length ? stats.rewards.map(reward => {
+      const rewardMap = {
+        'exclusive_theme': 'Эксклюзивная тема оформления (25 друзей)',
+        'consultation': 'Бесплатная консультация (20 друзей)',
+        'vip_status': 'VIP-статус (15 друзей)',
+        '500_points': '500 бонусных баллов (10 друзей)',
+        'year_subscription': 'Годовая подписка (5 друзей)',
+        'partner_badge': 'Значок "Партнёр" (3 друга)'
+      };
+      return `<li>${rewardMap[reward] || (reward.startsWith('random_bonus') ? 'Случайный бонус: +10 дней премиума' : reward)}</li>`;
+    }).join('') : '<li>Пока нет наград. Приглашайте друзей!</li>';
   }
 }
 
@@ -361,11 +295,8 @@ function animateValue(element, start, end, duration, suffix = '') {
   const step = (timestamp) => {
     if (!startTimestamp) startTimestamp = timestamp;
     const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-    const value = Math.floor(progress * (end - start) + start);
-    element.textContent = value + suffix;
-    if (progress < 1) {
-      window.requestAnimationFrame(step);
-    }
+    element.textContent = Math.floor(progress * (end - start) + start) + suffix;
+    if (progress < 1) window.requestAnimationFrame(step);
   };
   window.requestAnimationFrame(step);
 }
@@ -374,32 +305,28 @@ function animateValue(element, start, end, duration, suffix = '') {
 function copyReferralLink() {
   const referralCode = localStorage.getItem('referralCode');
   const referralLink = `https://dev-geniy.github.io/Client-Flow/index.html?ref=${referralCode}`;
-  navigator.clipboard.writeText(referralLink).then(() => {
-    showNotification('Ссылка скопирована!');
-  }).catch(err => {
-    console.error('Ошибка копирования:', err);
-    showNotification('Не удалось скопировать ссылку.', 'error');
-  });
+  navigator.clipboard.writeText(referralLink)
+    .then(() => showNotification('Ссылка скопирована!'))
+    .catch(err => {
+      console.error('Ошибка копирования:', err);
+      showNotification('Не удалось скопировать ссылку.', 'error');
+    });
 }
 
 // Функция шаринга реферальной ссылки
 function shareReferralLink() {
   const referralCode = localStorage.getItem('referralCode');
   const referralLink = `https://dev-geniy.github.io/Client-Flow/index.html?ref=${referralCode}`;
-  const shareText = 'Присоединяйтесь к Client Flow и управляйте клиентами легко! Используйте мою реферальную ссылку: ' + referralLink;
+  const shareText = `Присоединяйтесь к Client Flow и управляйте клиентами легко! Моя реферальная ссылка: ${referralLink}`;
 
   if (navigator.share) {
-    navigator.share({
-      title: 'Приглашение в Client Flow',
-      text: shareText,
-      url: referralLink
-    }).then(() => {
-      showNotification('Ссылка успешно отправлена!');
-    }).catch(err => {
-      console.error('Ошибка шаринга:', err);
-      showNotification('Не удалось поделиться ссылкой. Скопируйте её вручную.', 'error');
-      copyReferralLink();
-    });
+    navigator.share({ title: 'Приглашение в Client Flow', text: shareText, url: referralLink })
+      .then(() => showNotification('Ссылка успешно отправлена!'))
+      .catch(err => {
+        console.error('Ошибка шаринга:', err);
+        showNotification('Не удалось поделиться ссылкой. Скопируйте её вручную.', 'error');
+        copyReferralLink();
+      });
   } else {
     copyReferralLink();
     showNotification('Ссылка скопирована! Поделитесь ею вручную.');
@@ -409,19 +336,19 @@ function shareReferralLink() {
 // Функция сброса статистики
 function resetStats() {
   const referralCode = localStorage.getItem('referralCode');
-  if (referralCode) {
-    const db = firebase.database();
-    db.ref(`referrals/${referralCode}`).remove()
-      .then(() => {
-        localStorage.removeItem(`referralStats_${referralCode}`);
-        initializeReferralProgram();
-        showNotification('Статистика сброшена!');
-      })
-      .catch((error) => {
-        console.error('Ошибка сброса статистики:', error);
-        showNotification('Не удалось сбросить статистику. Попробуйте снова.', 'error');
-      });
-  }
+  if (!referralCode) return;
+
+  const db = firebase.database();
+  db.ref(`referrals/${referralCode}`).remove()
+    .then(() => {
+      localStorage.removeItem(`referralStats_${referralCode}`);
+      initializeReferralProgram();
+      showNotification('Статистика сброшена!');
+    })
+    .catch((error) => {
+      console.error('Ошибка сброса статистики:', error);
+      showNotification('Не удалось сбросить статистику. Попробуйте снова.', 'error');
+    });
 }
 
 // Функция генерации новой реферальной ссылки
