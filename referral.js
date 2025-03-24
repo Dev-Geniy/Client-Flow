@@ -5,8 +5,15 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('theme-switch').checked = isDark;
   document.getElementById('sidebar-theme-switch').checked = isDark;
 
-  // Инициализация реферальной программы
-  initializeReferralProgram();
+  // Анонимная авторизация через Firebase
+  firebase.auth().signInAnonymously().then((userCredential) => {
+    console.log('Успешная авторизация:', userCredential);
+    // Пользователь авторизован
+    initializeReferralProgram();
+  }).catch((error) => {
+    console.error('Ошибка авторизации:', error.code, error.message);
+    showNotification('Не удалось авторизоваться. Попробуйте позже. Код ошибки: ' + error.code, 'error');
+  });
 });
 
 // Переключение темы
@@ -139,36 +146,129 @@ function initializeReferralProgram() {
 
   // Устанавливаем реферальную ссылку
   const referralLinkInput = document.getElementById('referral-link');
-  referralLinkInput.value = `https://clientflow.com/ref/${referralCode}`;
+  referralLinkInput.value = `https://dev-geniy.github.io/Client-Flow/${referralCode}`; // Исправленная ссылка
 
-  // Инициализация статистики
-  let referralStats = JSON.parse(localStorage.getItem(`referralStats_${referralCode}`)) || {
-    clicks: 0,
-    friends: 0
-  };
-  updateDashboard(referralStats);
+  // Инициализация Firebase
+  const db = firebase.database();
+  const referralRef = db.ref(`referrals/${referralCode}`);
+
+  // Синхронизация статистики с Firebase
+  referralRef.on('value', (snapshot) => {
+    const data = snapshot.val() || {
+      clicks: 0,
+      friends: 0,
+      bonuses: 0,
+      rewards: [],
+      visitors: {}
+    };
+
+    // Кэшируем данные локально
+    localStorage.setItem(`referralStats_${referralCode}`, JSON.stringify(data));
+    updateDashboard(data);
+  });
 
   // Проверка, если страница открыта по реферальной ссылке
-  const urlParams = new URLSearchParams(window.location.search);
-  const refCode = urlParams.get('ref');
+  const urlPath = window.location.pathname.split('/').pop(); // Получаем последнюю часть пути
+  const refCode = urlPath || null; // Реферальный код из пути
   if (refCode && refCode !== referralCode) {
-    // Имитация перехода по ссылке (в реальном приложении это должно быть на сервере)
-    referralStats.clicks += 1;
-    referralStats.friends += 1; // Для простоты считаем, что каждый клик = 1 друг
-    localStorage.setItem(`referralStats_${refCode}`, JSON.stringify(referralStats));
-    updateDashboard(referralStats);
-    showNotification('Вы перешли по реферальной ссылке!');
-  }
+    const visitorId = localStorage.getItem('visitorId') || generateReferralCode();
+    localStorage.setItem('visitorId', visitorId);
 
-  // Для тестов: симуляция перехода по ссылке
-  // В реальном приложении это должно быть заменено на серверную логику
-  window.simulateClick = function() {
-    referralStats.clicks += 1;
-    referralStats.friends += 1; // Для простоты считаем, что каждый клик = 1 друг
-    localStorage.setItem(`referralStats_${referralCode}`, JSON.stringify(referralStats));
-    updateDashboard(referralStats);
-    showNotification('Кто-то перешёл по вашей ссылке!');
-  };
+    // Проверяем, был ли этот посетитель уже засчитан
+    referralRef.child(`visitors/${visitorId}`).once('value', (snapshot) => {
+      if (!snapshot.exists()) {
+        // Увеличиваем счётчик переходов
+        referralRef.transaction((currentData) => {
+          if (!currentData) {
+            return {
+              clicks: 1,
+              friends: 0,
+              bonuses: 0,
+              rewards: [],
+              visitors: { [visitorId]: true }
+            };
+          }
+          currentData.clicks = (currentData.clicks || 0) + 1;
+          currentData.visitors = currentData.visitors || {};
+          currentData.visitors[visitorId] = true;
+          return currentData;
+        });
+
+        // Добавляем кнопку "Подтвердить регистрацию"
+        document.querySelector('.referral-section').insertAdjacentHTML('beforeend', `
+          <div class="referral-card confirm-card">
+            <h3>Подтвердите регистрацию</h3>
+            <p>Вы перешли по реферальной ссылке! Подтвердите, чтобы ваш друг получил бонус.</p>
+            <button class="btn gradient-btn confirm-btn" onclick="confirmReferral('${refCode}')">
+              Подтвердить
+            </button>
+          </div>
+        `);
+
+        showNotification('Вы перешли по реферальной ссылке!');
+      }
+    });
+  }
+}
+
+// Подтверждение регистрации
+function confirmReferral(refCode) {
+  const db = firebase.database();
+  const referralRef = db.ref(`referrals/${refCode}`);
+
+  referralRef.transaction((currentData) => {
+    if (!currentData) {
+      return {
+        clicks: 1,
+        friends: 1,
+        bonuses: 1,
+        rewards: [],
+        visitors: {}
+      };
+    }
+    currentData.friends = (currentData.friends || 0) + 1;
+    currentData.bonuses = (currentData.bonuses || 0) + 1;
+
+    const friends = currentData.friends;
+    const rewards = currentData.rewards || [];
+    let bonusMessage = null;
+    if (friends >= 20 && !rewards.includes('consultation')) {
+      rewards.push('consultation');
+      bonusMessage = 'Вы заработали бесплатную консультацию!';
+    } else if (friends >= 15 && !rewards.includes('vip_status')) {
+      rewards.push('vip_status');
+      bonusMessage = 'Вы получили VIP-статус!';
+    } else if (friends >= 10 && !rewards.includes('500_points')) {
+      rewards.push('500_points');
+      bonusMessage = 'Вы заработали 500 бонусных баллов!';
+    } else if (friends >= 5 && !rewards.includes('year_subscription')) {
+      rewards.push('year_subscription');
+      bonusMessage = 'Вы заработали годовую подписку!';
+    } else if (friends >= 3 && !rewards.includes('partner_badge')) {
+      rewards.push('partner_badge');
+      bonusMessage = 'Вы заработали значок "Партнёр"!';
+    }
+
+    if (Math.random() < 0.1 && !rewards.includes(`random_bonus_${friends}`)) {
+      rewards.push(`random_bonus_${friends}`);
+      currentData.bonuses += 0.33;
+      bonusMessage = bonusMessage ? `${bonusMessage} И случайный бонус: +10 дней премиума!` : 'Вы получили случайный бонус: +10 дней премиума!';
+    }
+
+    currentData.rewards = rewards;
+
+    if (bonusMessage) {
+      const bonusModal = document.getElementById('bonus-modal');
+      document.getElementById('bonus-message').textContent = bonusMessage;
+      bonusModal.style.display = 'flex';
+      trapFocus(bonusModal);
+    }
+
+    return currentData;
+  });
+
+  document.querySelector('.confirm-card').remove();
+  showNotification('Спасибо за регистрацию! Ваш друг получил бонус.');
 }
 
 // Обновление дашборда
@@ -177,16 +277,45 @@ function updateDashboard(stats) {
   const friendsCount = document.getElementById('friends-count');
   const progressToBonus = document.getElementById('progress-to-bonus');
   const progressFill = document.getElementById('progress-fill');
+  const bonusesEarned = document.getElementById('bonuses-earned');
+  const rewardsList = document.getElementById('rewards-list');
 
   clicksCount.textContent = stats.clicks;
   friendsCount.textContent = stats.friends;
+  bonusesEarned.textContent = Math.floor(stats.bonuses * 30) + ' дней премиума';
 
-  const friendsNeededForBonus = 5;
-  const friendsRemaining = Math.max(0, friendsNeededForBonus - stats.friends);
-  progressToBonus.textContent = `${friendsRemaining} ${friendsRemaining === 1 ? 'друг' : 'друзей'}`;
+  // Определяем следующий уровень бонусов
+  const friends = stats.friends;
+  let nextLevel = 3;
+  if (friends >= 20) nextLevel = Infinity;
+  else if (friends >= 15) nextLevel = 20;
+  else if (friends >= 10) nextLevel = 15;
+  else if (friends >= 5) nextLevel = 10;
+  else if (friends >= 3) nextLevel = 5;
 
-  const progressPercentage = (stats.friends / friendsNeededForBonus) * 100;
+  const friendsRemaining = Math.max(0, nextLevel - friends);
+  progressToBonus.textContent = nextLevel === Infinity ? 'Все бонусы получены!' : `${friendsRemaining} ${friendsRemaining === 1 ? 'друг' : 'друзей'}`;
+
+  const progressPercentage = nextLevel === Infinity ? 100 : (friends / nextLevel) * 100;
   progressFill.style.width = `${Math.min(progressPercentage, 100)}%`;
+
+  // Обновляем историю наград
+  rewardsList.innerHTML = '';
+  const rewards = stats.rewards || [];
+  if (rewards.length === 0) {
+    rewardsList.innerHTML = '<li>Пока нет наград. Приглашайте друзей!</li>';
+  } else {
+    rewards.forEach(reward => {
+      let rewardText = '';
+      if (reward === 'partner_badge') rewardText = 'Значок "Партнёр" (3 друга)';
+      else if (reward === 'year_subscription') rewardText = 'Годовая подписка (5 друзей)';
+      else if (reward === '500_points') rewardText = '500 бонусных баллов (10 друзей)';
+      else if (reward === 'vip_status') rewardText = 'VIP-статус (15 друзей)';
+      else if (reward === 'consultation') rewardText = 'Бесплатная консультация (20 друзей)';
+      else if (reward.startsWith('random_bonus')) rewardText = 'Случайный бонус: +10 дней премиума';
+      rewardsList.innerHTML += `<li>${rewardText}</li>`;
+    });
+  }
 }
 
 // Функция копирования реферальной ссылки
@@ -217,3 +346,41 @@ function shareReferralLink() {
     showNotification('Ссылка скопирована! Поделитесь ею вручную.');
   }
 }
+
+// Функция сброса статистики
+function resetStats() {
+  const referralCode = localStorage.getItem('referralCode');
+  if (referralCode) {
+    const db = firebase.database();
+    db.ref(`referrals/${referralCode}`).remove();
+    localStorage.removeItem(`referralStats_${referralCode}`);
+    initializeReferralProgram();
+    showNotification('Статистика сброшена!');
+  }
+}
+
+// Функция генерации новой реферальной ссылки
+function generateNewReferralLink() {
+  const newCode = generateReferralCode();
+  const oldCode = localStorage.getItem('referralCode');
+  if (oldCode) {
+    const db = firebase.database();
+    db.ref(`referrals/${oldCode}`).remove();
+  }
+  localStorage.setItem('referralCode', newCode);
+  localStorage.removeItem(`referralStats_${newCode}`);
+  initializeReferralProgram();
+  showNotification('Новая реферальная ссылка сгенерирована!');
+}
+
+// Добавляем кнопку "Сгенерировать новую ссылку" в карточку с реферальной ссылкой
+document.querySelector('.referral-link').insertAdjacentHTML('afterend', `
+  <button class="btn gradient-btn generate-new-link-btn" onclick="generateNewReferralLink()" aria-label="Сгенерировать новую ссылку">
+    <span class="material-icons">refresh</span> Новая ссылка
+  </button>
+`);
+
+// Закрытие модального окна для бонусов
+document.querySelector('#bonus-modal .close').addEventListener('click', () => {
+  closeModal(document.getElementById('bonus-modal'));
+});
