@@ -487,8 +487,40 @@ button[title]:hover::after {
   margin: 0;
 }
 
-/* Изменение стилей для "О сообществе" */
-.about-community {
+/* Изменение для .social-links */
+.social-links {
+  flex-direction: column; /* Меняем направление на вертикальное */
+  align-items: flex-start; /* Выравниваем элементы по левому краю */
+  gap: 10px; /* Добавляем отступ между текстом и иконками */
+}
+
+.social-links .social-icons {
+  display: flex;
+  gap: 15px;
+  margin-top: 0; /* Убираем margin-top, так как теперь используется gap */
+}
+
+.social-links .social-icons a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.social-links .social-icons .social-icon {
+  width: 24px;
+  height: 24px;
+  fill: var(--text);
+  transition: fill 0.3s ease, transform 0.3s ease;
+}
+
+.social-links .social-icons a:hover .social-icon {
+  fill: var(--primary);
+  transform: scale(1.2);
+}
+
+/* Изменение стилей для "О блоге" */
+.about-blog {
   display: flex;
   flex-direction: column;
   gap: 10px;
