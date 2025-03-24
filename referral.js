@@ -33,7 +33,7 @@ const toggleTheme = (e) => {
   if (otherElement) otherElement.checked = e.target.checked;
 };
 
-document.getElementById('theme-switch  ('change', toggleTheme);
+document.getElementById('theme-switch')?.addEventListener('change', toggleTheme);
 document.getElementById('sidebar-theme-switch')?.addEventListener('change', toggleTheme);
 
 // Переключение боковой панели
@@ -349,6 +349,30 @@ function resetStats() {
       console.error('Ошибка сброса статистики:', error);
       showNotification('Не удалось сбросить статистику. Попробуйте снова.', 'error');
     });
+}
+
+// Функция генерации новой реферальной ссылки
+function generateNewReferralLink() {
+  const newCode = generateReferralCode();
+  const oldCode = localStorage.getItem('referralCode');
+  if (oldCode) {
+    const db = firebase.database();
+    db.ref(`referrals/${oldCode}`).remove()
+      .then(() => {
+        localStorage.setItem('referralCode', newCode);
+        localStorage.removeItem(`referralStats_${oldCode}`);
+        initializeReferralProgram();
+        showNotification('Новая реферальная ссылка сгенерирована!');
+      })
+      .catch((error) => {
+        console.error('Ошибка генерации новой ссылки:', error);
+        showNotification('Не удалось сгенерировать новую ссылку. Попробуйте снова.', 'error');
+      });
+  } else {
+    localStorage.setItem('referralCode', newCode);
+    initializeReferralProgram();
+    showNotification('Новая реферальная ссылка сгенерирована!');
+  }
 }
 
 // Закрытие модального окна для бонусов
