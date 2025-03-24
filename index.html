@@ -442,36 +442,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     measurementId: "G-EEFDNJL66Z"
   };
   firebase.initializeApp(firebaseConfig);
-
-  document.addEventListener('DOMContentLoaded', () => {
-    firebase.auth().signInAnonymously().then(() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const refCode = urlParams.get('ref');
-      if (refCode) {
-        const visitorId = localStorage.getItem('visitorId') || (Math.random().toString(36).substring(2, 10));
-        localStorage.setItem('visitorId', visitorId);
-
-        const db = firebase.database();
-        const referralRef = db.ref(`referrals/${refCode}`);
-        referralRef.child(`visitors/${visitorId}`).once('value', (snapshot) => {
-          if (!snapshot.exists()) {
-            referralRef.transaction((currentData) => {
-              if (!currentData) {
-                return { clicks: 1, friends: 0, bonuses: 0, rewards: [], visitors: { [visitorId]: true } };
-              }
-              currentData.clicks = (currentData.clicks || 0) + 1;
-              currentData.visitors = currentData.visitors || {};
-              currentData.visitors[visitorId] = true;
-              return currentData;
-            });
-            // Можно добавить уведомление на index.html, если нужно
-            console.log('Вы анонимно авторизировались, подтвердите бонус для пригласившего Вас друга на странице Партнёрской Программы!');
-          }
-        });
-      }
-    });
-  });
 </script>
+
 <script src="script.js"></script>
 
 </body>
