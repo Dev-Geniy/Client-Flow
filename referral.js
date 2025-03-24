@@ -375,6 +375,18 @@ function generateNewReferralLink() {
   }
 }
 
+// Добавляем кнопку "Сгенерировать новую ссылку"
+document.addEventListener('DOMContentLoaded', () => {
+  const referralLinkContainer = document.querySelector('.referral-link');
+  if (referralLinkContainer) {
+    referralLinkContainer.insertAdjacentHTML('afterend', `
+      <button class="btn gradient-btn generate-new-link-btn" onclick="generateNewReferralLink()" aria-label="Сгенерировать новую ссылку">
+        <span class="material-icons">refresh</span> Новая ссылка
+      </button>
+    `);
+  }
+});
+
 // Закрытие модального окна для бонусов
 document.querySelector('#bonus-modal .close')?.addEventListener('click', () => {
   closeModal(document.getElementById('bonus-modal'));
