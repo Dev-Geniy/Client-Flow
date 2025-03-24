@@ -418,7 +418,51 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       <p>Следите за обновлениями в нашем <a href="https://t.me/client_flow_crm" target="_blank" rel="noopener">Telegram-канале</a> или на <a href="https://x.com/HotDog850642" target="_blank" rel="noopener">X</a>!</p>
     </div>
   </div>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD3Sqbuy2Swcdemr0H_qHr6EBT5UGv2JQc",
+    authDomain: "client-flow-beta.firebaseapp.com",
+    databaseURL: "https://client-flow-beta-default-rtdb.firebaseio.com",
+    projectId: "client-flow-beta",
+    storageBucket: "client-flow-beta.firebasestorage.app",
+    messagingSenderId: "838413488663",
+    appId: "1:838413488663:web:940f563c089a87f455c252",
+    measurementId: "G-EEFDNJL66Z"
+  };
+  firebase.initializeApp(firebaseConfig);
 
+  document.addEventListener('DOMContentLoaded', () => {
+    firebase.auth().signInAnonymously().then(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get('ref');
+      if (refCode) {
+        const visitorId = localStorage.getItem('visitorId') || (Math.random().toString(36).substring(2, 10));
+        localStorage.setItem('visitorId', visitorId);
+
+        const db = firebase.database();
+        const referralRef = db.ref(`referrals/${refCode}`);
+        referralRef.child(`visitors/${visitorId}`).once('value', (snapshot) => {
+          if (!snapshot.exists()) {
+            referralRef.transaction((currentData) => {
+              if (!currentData) {
+                return { clicks: 1, friends: 0, bonuses: 0, rewards: [], visitors: { [visitorId]: true } };
+              }
+              currentData.clicks = (currentData.clicks || 0) + 1;
+              currentData.visitors = currentData.visitors || {};
+              currentData.visitors[visitorId] = true;
+              return currentData;
+            });
+            // Можно добавить уведомление на index.html, если нужно
+            console.log('Вы анонимно авторизировались, подтвердите бонус для пригласившего Вас друга на странице Партнёрской Программы!');
+          }
+        });
+      }
+    });
+  });
+</script>
 <script src="script.js"></script>
 
 </body>
