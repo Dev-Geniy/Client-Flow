@@ -289,45 +289,71 @@ document.getElementById('phones-container').addEventListener('click', (e) => {
 
 // Form submission
 document.getElementById('client-form').addEventListener('submit', (e) => {
-  e.preventDefault();
+  e.preventDefault(); // Предотвращаем стандартное поведение формы
+  console.log('Форма отправлена'); // Отладка: проверяем, срабатывает ли событие
+
   const phones = Array.from(document.querySelectorAll('#phones-container input[name="phone"]'))
-    .map(input => input.value)
+    .map(input => input.value.trim())
     .filter(v => v);
-  
-  const social = document.getElementById('social').value;
-  const website = document.getElementById('website').value;
-  
+
+  const social = document.getElementById('social').value.trim();
+  const website = document.getElementById('website').value.trim();
+
+  // Валидация
   if (social && !isValidUrl(social)) {
     showNotification('Некорректный URL соцсети');
+    console.log('Ошибка валидации: social URL'); // Отладка
     return;
   }
   if (website && !isValidUrl(website)) {
     showNotification('Некорректный URL сайта');
+    console.log('Ошибка валидации: website URL'); // Отладка
     return;
   }
 
+  // Собираем данные клиента
   const data = {
-    name: document.getElementById('name').value,
-    company: document.getElementById('company').value,
+    name: document.getElementById('name').value.trim(),
+    company: document.getElementById('company').value.trim(),
     social,
     website,
     phones,
-    image: document.getElementById('image').value,
+    image: document.getElementById('image').value.trim(),
     tags: document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t),
     deadline: document.getElementById('deadline').value,
     status: document.getElementById('status').value,
-    notes: document.getElementById('notes').value,
+    notes: document.getElementById('notes').value.trim(),
     favorite: document.getElementById('favorite').checked,
     priority: document.getElementById('status').value === 'priority' ? 1 : 0,
     createdAt: new Date().toISOString()
   };
 
-  const index = e.target.dataset.index;
-  if (index !== '') clients[index] = data;
-  else clients.push(data);
+  console.log('Данные клиента:', data); // Отладка: проверяем собранные данные
 
+  // Сохранение
+  const index = e.target.dataset.index;
+  if (index !== '') {
+    clients[index] = data; // Обновляем существующего клиента
+    console.log('Клиент обновлён, индекс:', index);
+  } else {
+    clients.push(data); // Добавляем нового клиента
+    console.log('Новый клиент добавлен');
+  }
+
+  // Сортировка по приоритету
   clients.sort((a, b) => (b.priority || 0) - (a.priority || 0));
-  localStorage.setItem('clients', JSON.stringify(clients));
+
+  // Сохранение в localStorage
+  try {
+    localStorage.setItem('clients', JSON.stringify(clients));
+    console.log('Клиенты сохранены в localStorage:', clients);
+  } catch (error) {
+    console.error('Ошибка сохранения в localStorage:', error);
+    showNotification('Ошибка сохранения данных');
+    return;
+  }
+
+  // Обновляем интерфейс
   renderClients(document.querySelector('.filter-btn.active').id.replace('filter-', ''));
   modal.style.display = 'none';
   showNotification('Клиент сохранён');
@@ -793,3 +819,20 @@ document.querySelector('.cookies-link').addEventListener('click', (e) => {
 document.querySelector('.changelog-btn').addEventListener('click', () => {
   openModal('changelog-modal');
 });
+
+document.querySelector('#client-form button[type="submit"]').addEventListener('click', (e) => {
+  e.preventDefault(); // Предотвращаем двойное срабатывание, если submit уже работает
+  document.getElementById('client-form').dispatchEvent(new Event('submit')); // Программно вызываем submit
+});
+
+// ВРЕМЕННАЯ ПРОВЕРКА ЛОКАЛ СТОРЕДЖ
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    localStorage.setItem('test', 'ok');
+    console.log('localStorage работает:', localStorage.getItem('test'));
+  } catch (e) {
+    console.error('localStorage недоступен:', e);
+    showNotification('Хранилище недоступно на устройстве');
+  }
+});
+// КОНЕЦ ПРОВЕРКИ
