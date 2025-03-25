@@ -879,6 +879,7 @@ body:not(.dark) .footer-social h4::after {
   list-style: none;
   padding: 0;
   margin: 0 0 1rem;
+  counter-reset: step-counter; /* Инициализируем счетчик */
 }
 
 .referral-steps li {
@@ -889,8 +890,8 @@ body:not(.dark) .footer-social h4::after {
 }
 
 .referral-steps li::before {
-  content: counter(step-counter);
-  counter-increment: step-counter;
+  content: counter(step-counter); /* Выводим значение счетчика */
+  counter-increment: step-counter; /* Увеличиваем счетчик для каждого li */
   position: absolute;
   left: 0;
   color: var(--primary);
@@ -1013,7 +1014,6 @@ body:not(.dark) .footer-social h4::after {
   }
 }
 
-/* ============================================= */
 /* Стили для кнопки сброса */
 .reset-btn {
   margin-top: 1rem;
