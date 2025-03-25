@@ -543,12 +543,80 @@ form textarea { min-height: 100px; resize: vertical; }
 
 .btn-add-phone:hover { transform: scale(1.1); }
 
+/* Существующие стили для .actions остаются без изменений */
 .actions {
   display: flex;
   gap: 10px;
-  margin-top: 15px;
   justify-content: flex-end;
   flex-wrap: wrap;
+}
+
+/* Стили для кнопок действий только внутри карточек клиентов */
+.client-card .actions button {
+  background: none;
+  border: none;
+  padding: 8px;
+  border-radius: 50%; /* Круглая форма */
+  cursor: pointer;
+  transition: all 0.3s ease; /* Плавные переходы */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; /* Фиксированная ширина */
+  height: 36px; /* Фиксированная высота */
+}
+
+/* Иконки Material Icons внутри кнопок карточек */
+.client-card .actions button .material-icons {
+  font-size: 20px; /* Размер иконок */
+  color: var(--text); /* Цвет текста по умолчанию */
+}
+
+/* Кнопка "Редактировать" внутри карточек */
+.client-card .actions button[title="Редактировать клиента"] {
+  background: rgba(124, 77, 255, 0.1); /* Светло-фиолетовый фон */
+}
+
+.client-card .actions button[title="Редактировать клиента"]:hover {
+  background: var(--primary); /* Основной цвет при наведении */
+  box-shadow: 0 4px 12px rgba(124, 77, 255, 0.3); /* Тень */
+}
+
+.client-card .actions button[title="Редактировать клиента"]:hover .material-icons {
+  color: #fff; /* Белый цвет иконки при наведении */
+}
+
+/* Кнопка "Удалить" внутри карточек */
+.client-card .actions button[title="Удалить клиента"] {
+  background: rgba(244, 67, 54, 0.1); /* Светло-красный фон */
+}
+
+.client-card .actions button[title="Удалить клиента"]:hover {
+  background: #f44336; /* Красный цвет при наведении */
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3); /* Тень */
+}
+
+.client-card .actions button[title="Удалить клиента"]:hover .material-icons {
+  color: #fff; /* Белый цвет иконки при наведении */
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .client-card .actions button {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+  
+  .client-card .actions button .material-icons {
+    font-size: 18px;
+  }
+}
+
+/* Доступность: фокус для клавиатуры */
+.client-card .actions button:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* Уведомления */
@@ -591,11 +659,19 @@ form textarea { min-height: 100px; resize: vertical; }
   .widgets { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 480px) {
-  .client-grid { grid-template-columns: 1fr; }
-  .widgets { grid-template-columns: repeat(2, 1fr); } /* Исправлено с "2, 1fr" */
-  .filters { flex-direction: column; align-items: stretch; }
+/* Делаем карточку контейнером для абсолютного позиционирования */
+.client-card {
+  position: relative; /* Добавляем, чтобы .actions позиционировался относительно карточки */
+  padding-bottom: 60px; /* Отступ снизу для контента, чтобы кнопки не перекрывали */
 }
+
+/* Прижимаем .actions к нижнему правому углу */
+.client-card .actions {
+  position: absolute;
+  bottom: 10px; /* Отступ от низа */
+  right: 10px; /* Отступ от правого края */
+}
+
 
 /* Новый чекбокс */
 .favorite-checkbox input[type="checkbox"] {
@@ -740,7 +816,6 @@ form textarea { min-height: 100px; resize: vertical; }
   max-width: 150px;
 }
 
-/* Футер - - - - - - - - - - */
 .footer {
   background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
   color: #fff;
